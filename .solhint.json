@@ -1,0 +1,19 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "compiler-version":           ["error", "^0.8.24"],
+    "avoid-tx-origin":            "error",
+    "avoid-call-value":           "error",
+    "no-unused-vars":             "warn",
+    "func-visibility":            ["warn", {"ignoreConstructors": true}],
+    "reason-string":              ["warn", {"maxLength": 64}],
+    "max-states-count":           ["warn", 20],
+    "no-empty-blocks":            "warn",
+    "not-rely-on-time":           "off",
+    "multiple-sends":             "error",
+    "reentrancy":                 "error",
+    "mark-callable-contracts":    "warn",
+    "no-complex-fallback":        "error"
+  },
+  "excludedFiles": ["test/**", "script/**", "lib/**", "src/mocks/**"]
+}

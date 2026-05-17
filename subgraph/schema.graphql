@@ -1,0 +1,178 @@
+"""
+Prediction Market protocol — The Graph schema.
+Entities: Market, Swap, LiquidityEvent, Claim, MarketResolution, TokenHolder, VaultSnapshot, FeeEvent
+"""
+
+# ── Entity 1: Market ─────────────────────────────────────────────────────────
+
+type Market @entity {
+  id:                  ID!           # market contract address
+  question:            String!
+  collateralToken:     Bytes!
+  oracle:              Bytes!
+  thresholdPrice:      BigInt!
+  closeTime:           BigInt!
+  disputeWindowEnd:    BigInt
+  state:               Int!          # 0=Active 1=Closed 2=Resolved 3=Disputed 4=Finalized
+  outcome:             Int!          # 0=Unresolved 1=Yes 2=No 3=Invalid
+  yesTokenId:          BigInt!
+  noTokenId:           BigInt!
+  lpToken:             Bytes!
+  yesReserve:          BigInt!
+  noReserve:           BigInt!
+  totalCollateralIn:   BigInt!
+  totalFeesProtocol:   BigInt!
+  totalFeesLP:         BigInt!
+  totalLPMinted:       BigInt!
+  createdAtBlock:      BigInt!
+  createdAtTimestamp:  BigInt!
+
+  swaps:           [Swap!]!          @derivedFrom(field: "market")
+  liquidityEvents: [LiquidityEvent!]! @derivedFrom(field: "market")
+  claims:          [Claim!]!          @derivedFrom(field: "market")
+  resolution:      MarketResolution   @derivedFrom(field: "market")
+}
+
+# ── Entity 2: Swap ────────────────────────────────────────────────────────────
+
+type Swap @entity(immutable: true) {
+  id:             ID!       # tx hash + log index
+  market:         Market!
+  trader:         Bytes!
+  isYes:          Boolean!
+  collateralIn:   BigInt!
+  sharesOut:      BigInt!
+  feeProtocol:    BigInt!
+  feeLP:          BigInt!
+  timestamp:      BigInt!
+  blockNumber:    BigInt!
+  txHash:         Bytes!
+}
+
+# ── Entity 3: LiquidityEvent ──────────────────────────────────────────────────
+
+type LiquidityEvent @entity(immutable: true) {
+  id:             ID!
+  market:         Market!
+  provider:       Bytes!
+  type:           String!   # "add" | "remove"
+  collateralIn:   BigInt    # only for "add"
+  lpTokens:       BigInt!   # minted (add) or burned (remove)
+  yesOut:         BigInt    # only for "remove"
+  noOut:          BigInt    # only for "remove"
+  timestamp:      BigInt!
+  blockNumber:    BigInt!
+  txHash:         Bytes!
+}
+
+# ── Entity 4: Claim ───────────────────────────────────────────────────────────
+
+type Claim @entity(immutable: true) {
+  id:                ID!
+  market:            Market!
+  claimer:           Bytes!
+  collateralReturned: BigInt!
+  sharesBurned:      BigInt!
+  timestamp:         BigInt!
+  blockNumber:       BigInt!
+  txHash:            Bytes!
+}
+
+# ── Entity 5: MarketResolution ────────────────────────────────────────────────
+
+type MarketResolution @entity {
+  id:          ID!       # market address
+  market:      Market!
+  outcome:     Int!
+  resolver:    Bytes!
+  oraclePrice: BigInt!
+  timestamp:   BigInt!
+  isDisputed:  Boolean!
+  disputer:    Bytes
+  disputeReason: String
+}
+
+# ── Entity 6: TokenHolder ─────────────────────────────────────────────────────
+
+type TokenHolder @entity {
+  id:           ID!       # holder address
+  balance:      BigInt!
+  delegateTo:   Bytes
+  votingPower:  BigInt!
+  updatedAt:    BigInt!
+}
+
+# ── Entity 7: VaultSnapshot ───────────────────────────────────────────────────
+
+type VaultSnapshot @entity {
+  id:           ID!       # block number
+  totalAssets:  BigInt!
+  totalShares:  BigInt!
+  timestamp:    BigInt!
+  blockNumber:  BigInt!
+}
+
+# ── Entity 8: FeeEvent ────────────────────────────────────────────────────────
+
+type FeeEvent @entity(immutable: true) {
+  id:           ID!
+  source:       Bytes!   # market address that generated the fee
+  amount:       BigInt!
+  timestamp:    BigInt!
+  blockNumber:  BigInt!
+  txHash:       Bytes!
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+#
+#  DOCUMENTED GRAPHQL QUERIES (5 required by spec)
+#
+#  Query 1 — Active markets list (for the markets page)
+#
+#  query ActiveMarkets {
+#    markets(where: { state: 0 }, orderBy: closeTime, orderDirection: asc) {
+#      id question yesReserve noReserve totalCollateralIn closeTime
+#    }
+#  }
+#
+#  Query 2 — Recent swaps for a specific market (for the activity feed)
+#
+#  query MarketSwaps($market: ID!, $skip: Int) {
+#    swaps(
+#      where: { market: $market }
+#      orderBy: timestamp orderDirection: desc
+#      first: 25 skip: $skip
+#    ) {
+#      trader isYes collateralIn sharesOut feeLP timestamp txHash
+#    }
+#  }
+#
+#  Query 3 — User's positions across all markets (for the portfolio page)
+#
+#  query UserClaims($user: Bytes!) {
+#    claims(where: { claimer: $user }, orderBy: timestamp, orderDirection: desc) {
+#      market { id question outcome }
+#      collateralReturned sharesBurned timestamp
+#    }
+#  }
+#
+#  Query 4 — Governance token leaderboard (top 20 by voting power)
+#
+#  query TopHolders {
+#    tokenHolders(orderBy: votingPower, orderDirection: desc, first: 20) {
+#      id balance delegateTo votingPower updatedAt
+#    }
+#  }
+#
+#  Query 5 — Protocol fee revenue over time (for analytics dashboard)
+#
+#  query FeeRevenue($since: BigInt!) {
+#    feeEvents(where: { timestamp_gte: $since }, orderBy: timestamp) {
+#      source amount timestamp txHash
+#    }
+#    vaultSnapshots(orderBy: blockNumber, orderDirection: desc, first: 1) {
+#      totalAssets totalShares timestamp
+#    }
+#  }
+#
+# ──────────────────────────────────────────────────────────────────────────────

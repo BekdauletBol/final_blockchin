@@ -1,0 +1,233 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  ##############################################################
+  #  1. BUILD + UNIT/FUZZ/INVARIANT TESTS (no fork)
+  ##############################################################
+  test:
+    name: Forge Build + Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install dependencies
+        run: |
+          forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-commit
+          forge install OpenZeppelin/openzeppelin-contracts-upgradeable@v5.1.0 --no-commit
+          forge install smartcontractkit/chainlink-brownie-contracts@1.3.0 --no-commit
+          forge install foundry-rs/forge-std --no-commit
+
+      - name: Compile
+        run: forge build --sizes
+
+      - name: Run unit + fuzz + invariant tests (no fork)
+        run: |
+          forge test \
+            --no-match-contract "Fork" \
+            --match-path "test/**/*.t.sol" \
+            -vvv \
+            --ffi false
+
+  ##############################################################
+  #  2. FORK TESTS (requires RPC secrets)
+  ##############################################################
+  fork-tests:
+    name: Fork Tests
+    runs-on: ubuntu-latest
+    # Only run if secrets are available (i.e., not on forks from external contributors)
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install dependencies
+        run: |
+          forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-commit
+          forge install OpenZeppelin/openzeppelin-contracts-upgradeable@v5.1.0 --no-commit
+          forge install smartcontractkit/chainlink-brownie-contracts@1.3.0 --no-commit
+          forge install foundry-rs/forge-std --no-commit
+
+      - name: Run fork tests (Arbitrum mainnet)
+        env:
+          ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
+          MAINNET_RPC_URL:  ${{ secrets.MAINNET_RPC_URL }}
+        run: |
+          forge test \
+            --match-contract "Fork" \
+            --fork-url "$ARBITRUM_RPC_URL" \
+            -vvv
+
+  ##############################################################
+  #  3. COVERAGE
+  ##############################################################
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install dependencies
+        run: |
+          forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-commit
+          forge install OpenZeppelin/openzeppelin-contracts-upgradeable@v5.1.0 --no-commit
+          forge install smartcontractkit/chainlink-brownie-contracts@1.3.0 --no-commit
+          forge install foundry-rs/forge-std --no-commit
+
+      - name: Generate coverage
+        run: |
+          forge coverage \
+            --no-match-contract "Fork" \
+            --report lcov \
+            --report summary \
+            > docs/COVERAGE.md
+
+      - name: Assert 90% line coverage
+        run: |
+          COVERAGE=$(forge coverage \
+            --no-match-contract "Fork" \
+            --report summary 2>&1 \
+            | grep -oP '\d+\.\d+(?=% Lines)' | head -1)
+          echo "Line coverage: ${COVERAGE}%"
+          python3 -c "
+          cov = float('${COVERAGE}')
+          assert cov >= 90.0, f'Coverage {cov}% is below 90% requirement'
+          print(f'Coverage OK: {cov}%')
+          "
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: lcov.info
+
+  ##############################################################
+  #  4. SLITHER STATIC ANALYSIS
+  ##############################################################
+  slither:
+    name: Slither Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install dependencies
+        run: |
+          forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-commit
+          forge install OpenZeppelin/openzeppelin-contracts-upgradeable@v5.1.0 --no-commit
+          forge install smartcontractkit/chainlink-brownie-contracts@1.3.0 --no-commit
+          forge install foundry-rs/forge-std --no-commit
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Slither
+        run: pip install slither-analyzer
+
+      - name: Run Slither
+        run: |
+          slither . \
+            --exclude-dependencies \
+            --filter-paths "test/,script/,lib/" \
+            --json slither-report.json \
+            --checklist 2>&1 | tee slither-output.txt || true
+          # Fail CI if any HIGH or MEDIUM findings present
+          python3 -c "
+          import json, sys
+          with open('slither-report.json') as f:
+              data = json.load(f)
+          highs   = [r for r in data.get('results', {}).get('detectors', []) if r['impact'] == 'High']
+          mediums = [r for r in data.get('results', {}).get('detectors', []) if r['impact'] == 'Medium']
+          if highs:
+              print('FATAL: Slither found HIGH findings:')
+              for h in highs: print(' -', h['description'])
+              sys.exit(1)
+          if mediums:
+              print('FATAL: Slither found MEDIUM findings:')
+              for m in mediums: print(' -', m['description'])
+              sys.exit(1)
+          print('Slither: zero High / zero Medium findings ✓')
+          "
+
+      - name: Upload Slither report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slither-report
+          path: |
+            slither-report.json
+            slither-output.txt
+
+  ##############################################################
+  #  5. FORMATTING LINT
+  ##############################################################
+  lint:
+    name: Lint (forge fmt + solhint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install solhint + prettier
+        run: npm install -g solhint prettier prettier-plugin-solidity
+
+      - name: Check Forge formatting
+        run: forge fmt --check
+
+      - name: Run solhint
+        run: solhint 'src/**/*.sol' --config .solhint.json
+
+      - name: Run Prettier on frontend
+        run: |
+          cd frontend
+          npx prettier --check "src/**/*.{js,ts,tsx,jsx}" 2>/dev/null || true

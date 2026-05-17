@@ -1,0 +1,40 @@
+# Foundry
+cache/
+out/
+broadcast/*/dryRun/
+broadcast/**/run-latest.json
+!broadcast/**/run-*.json
+lib/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+
+# Subgraph
+subgraph/generated/
+subgraph/build/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Coverage
+lcov.info
+coverage/
+
+# Slither
+slither.db.json
+crytic-export/
+
+# Deployment artifacts (keep verified ones in deployments/)
+deployments/local/
