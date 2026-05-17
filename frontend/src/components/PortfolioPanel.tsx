@@ -55,11 +55,11 @@ export function PortfolioPanel() {
         <h3>💰 Token Balances</h3>
         <div className="stat">
           <label>PRED Balance:</label>
-          <span>{balance ? formatUnits(balance, 18) : "0.00"}</span>
+          <span>{balance ? Number(formatUnits(balance, 18)).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0.00"}</span>
         </div>
         <div className="stat">
           <label>Voting Power:</label>
-          <span>{votes ? formatUnits(votes, 18) : "0.00"}</span>
+          <span>{votes ? Number(formatUnits(votes, 18)).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0.00"}</span>
         </div>
       </div>
 
