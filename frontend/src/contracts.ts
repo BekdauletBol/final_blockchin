@@ -1,13 +1,13 @@
 // Auto-generated from deployments/arbitrum-sepolia.json — update after each deploy
 
 export const ADDRESSES = {
-  govToken:          "0x0000000000000000000000000000000000000001" as `0x${string}`,
-  timelock:          "0x0000000000000000000000000000000000000002" as `0x${string}`,
-  governor:          "0x0000000000000000000000000000000000000003" as `0x${string}`,
-  conditionalTokens: "0x0000000000000000000000000000000000000004" as `0x${string}`,
-  feeVault:          "0x0000000000000000000000000000000000000005" as `0x${string}`,
-  factory:           "0x0000000000000000000000000000000000000006" as `0x${string}`,
-  market1:           "0x0000000000000000000000000000000000000007" as `0x${string}`,
+  govToken:          "0x316E03b1C406540068012c9eDad8A4A03e3BB533" as `0x${string}`,
+  timelock:          "0x72D44a58D9ede9cAFB4A9EE35724B16EB46c1497" as `0x${string}`,
+  governor:          "0x830320185c88D16C94FCd8C497745C812fF423eB" as `0x${string}`,
+  conditionalTokens: "0xbc41495a062956b40BB96aa21d57C2E010eAF1EF" as `0x${string}`,
+  feeVault:          "0xA890E97Ef006C0388B62B190a6cFf199181b781F" as `0x${string}`,
+  factory:           "0x680B59b93dc038530D839755C42D4dA19f9F2893" as `0x${string}`,
+  market1:           "0xAa4e61D30A32775123a997d805332eB6f63351CC" as `0x${string}`,
 } as const;
 
 // ─── Minimal ABIs (only functions needed by the frontend) ────────────────────
