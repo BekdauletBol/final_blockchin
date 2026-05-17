@@ -2,13 +2,13 @@
 pragma solidity 0.8.24;
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {Create2}     from "@openzeppelin/contracts/utils/Create2.sol";
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-import {PredictionMarket}      from "./PredictionMarket.sol";
-import {LPToken}               from "../tokens/LPToken.sol";
-import {IConditionalTokens}    from "../interfaces/IConditionalTokens.sol";
-import {IPredictionMarket}     from "../interfaces/IPredictionMarket.sol";
+import {PredictionMarket} from "./PredictionMarket.sol";
+import {LPToken} from "../tokens/LPToken.sol";
+import {IConditionalTokens} from "../interfaces/IConditionalTokens.sol";
+import {IPredictionMarket} from "../interfaces/IPredictionMarket.sol";
 
 /// @title MarketFactory
 /// @notice Deploys PredictionMarket proxies and their companion LPTokens.
@@ -75,20 +75,23 @@ contract MarketFactory is AccessControl {
         address admin_,
         address bootstrapCreator_
     ) {
-        if (implementation_ == address(0) || conditionalTokens_ == address(0) || feeVault_ == address(0)
-            || timelock_ == address(0) || pauser_ == address(0) || admin_ == address(0))
+        if (
+            implementation_ == address(0) || conditionalTokens_ == address(0) || feeVault_ == address(0)
+                || timelock_ == address(0) || pauser_ == address(0) || admin_ == address(0)
+        ) {
             revert ZeroAddress();
+        }
 
-        implementation     = implementation_;
-        conditionalTokens  = conditionalTokens_;
-        feeVault           = feeVault_;
-        timelock           = timelock_;
-        pauser             = pauser_;
+        implementation = implementation_;
+        conditionalTokens = conditionalTokens_;
+        feeVault = feeVault_;
+        timelock = timelock_;
+        pauser = pauser_;
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin_);
-        _grantRole(CREATOR_ROLE,       bootstrapCreator_);
+        _grantRole(CREATOR_ROLE, bootstrapCreator_);
         // Production handover: Timelock should also hold CREATOR_ROLE so DAO proposals can mint markets.
-        _grantRole(CREATOR_ROLE,       timelock_);
+        _grantRole(CREATOR_ROLE, timelock_);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -98,12 +101,12 @@ contract MarketFactory is AccessControl {
     struct CreateParams {
         address collateralToken;
         address oracle;
-        int256  thresholdPrice;
-        uint64  closeTime;
-        uint64  disputeWindowDuration;
-        string  question;
-        string  lpName;
-        string  lpSymbol;
+        int256 thresholdPrice;
+        uint64 closeTime;
+        uint64 disputeWindowDuration;
+        string question;
+        string lpName;
+        string lpSymbol;
         bytes32 salt;
     }
 
@@ -121,10 +124,8 @@ contract MarketFactory is AccessControl {
         // Initialiser data is empty; we initialise AFTER LPToken deployment so we can
         // pass its address.  The market is *uninitialized* between these two steps —
         // safe because no external code holds its address yet.
-        bytes memory creationCode = abi.encodePacked(
-            type(ERC1967Proxy).creationCode,
-            abi.encode(implementation, bytes(""))
-        );
+        bytes memory creationCode =
+            abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, bytes("")));
         market = Create2.deploy(0, p.salt, creationCode);
 
         // Pre-register the market in ConditionalTokens (also CREATE-style step).
@@ -135,22 +136,23 @@ contract MarketFactory is AccessControl {
         lpTokenAddr = address(lpToken);
 
         // --- Now initialise the proxy. ---
-        PredictionMarket(market).initialize(
-            IPredictionMarket.InitParams({
-                admin:                 timelock,
-                pauser:                pauser,
-                upgrader:              timelock,
-                collateralToken:       p.collateralToken,
-                conditionalTokens:     conditionalTokens,
-                oracle:                p.oracle,
-                feeVault:              feeVault,
-                lpToken:               lpTokenAddr,
-                thresholdPrice:        p.thresholdPrice,
-                closeTime:             p.closeTime,
+        PredictionMarket(market)
+            .initialize(
+                IPredictionMarket.InitParams({
+                admin: timelock,
+                pauser: pauser,
+                upgrader: timelock,
+                collateralToken: p.collateralToken,
+                conditionalTokens: conditionalTokens,
+                oracle: p.oracle,
+                feeVault: feeVault,
+                lpToken: lpTokenAddr,
+                thresholdPrice: p.thresholdPrice,
+                closeTime: p.closeTime,
                 disputeWindowDuration: p.disputeWindowDuration,
-                question:              p.question
+                question: p.question
             })
-        );
+            );
 
         marketBySalt[p.salt] = market;
         allMarkets.push(market);
@@ -168,10 +170,8 @@ contract MarketFactory is AccessControl {
     /// @notice Compute the CREATE2 address of a market before deployment.
     /// @dev Useful for the dApp to pre-display a market URL while the proposal is in voting.
     function predictMarketAddress(bytes32 salt) external view returns (address) {
-        bytes memory creationCode = abi.encodePacked(
-            type(ERC1967Proxy).creationCode,
-            abi.encode(implementation, bytes(""))
-        );
+        bytes memory creationCode =
+            abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, bytes("")));
         return Create2.computeAddress(salt, keccak256(creationCode), address(this));
     }
 }

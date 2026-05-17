@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}             from "../Base.t.sol";
+import {Base} from "../Base.t.sol";
 import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
-import {IMarketAMM}       from "src/interfaces/IMarketAMM.sol";
-import {MarketFactory}      from "src/market/MarketFactory.sol";
-import {PredictionMarket}   from "src/market/PredictionMarket.sol";
+import {IMarketAMM} from "src/interfaces/IMarketAMM.sol";
+import {MarketFactory} from "src/market/MarketFactory.sol";
+import {PredictionMarket} from "src/market/PredictionMarket.sol";
 
 contract MarketAMMTest is Base {
     /*//////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@ contract MarketAMMTest is Base {
 
     function test_add_liquidity_mints_lp_tokens() public {
         uint256 lpBefore = lpToken.totalSupply();
-        uint256 amount   = 10_000e6;
+        uint256 amount = 10_000e6;
         vm.prank(bob);
         uint256 lp = market.addLiquidity(amount, 0, block.timestamp + 1 hours);
         assertGt(lp, 0);
@@ -37,15 +37,15 @@ contract MarketAMMTest is Base {
         // For first deposit test, deploy a fresh market
         (address m,) = factory.createMarket(
             MarketFactory.CreateParams({
-                collateralToken:       address(usdc),
-                oracle:                address(resolver),
-                thresholdPrice:        THRESHOLD,
-                closeTime:             uint64(block.timestamp + CLOSE_DELAY),
+                collateralToken: address(usdc),
+                oracle: address(resolver),
+                thresholdPrice: THRESHOLD,
+                closeTime: uint64(block.timestamp + CLOSE_DELAY),
                 disputeWindowDuration: DISPUTE_WIN,
-                question:              "Fresh market",
-                lpName:                "LP #2",
-                lpSymbol:              "PRED-LP-2",
-                salt:                  keccak256("market-fresh")
+                question: "Fresh market",
+                lpName: "LP #2",
+                lpSymbol: "PRED-LP-2",
+                salt: keccak256("market-fresh")
             })
         );
         vm.prank(alice);
@@ -56,7 +56,7 @@ contract MarketAMMTest is Base {
     }
 
     function test_add_liquidity_slippage_protection() public {
-        uint256 amount = 5_000e6;
+        uint256 amount = 5000e6;
         vm.prank(bob);
         uint256 expected = market.addLiquidity(amount, 0, block.timestamp + 1 hours);
         // Now try with minLp = expected + 1 (impossible to satisfy)
@@ -98,11 +98,11 @@ contract MarketAMMTest is Base {
         uint256 supply = lpToken.totalSupply();
 
         uint256 expectedYes = lp * yr / supply;
-        uint256 expectedNo  = lp * nr / supply;
+        uint256 expectedNo = lp * nr / supply;
 
         (uint256 yesId, uint256 noId) = _ids();
         uint256 yesBefore = ct.balanceOf(alice, yesId);
-        uint256 noBefore  = ct.balanceOf(alice, noId);
+        uint256 noBefore = ct.balanceOf(alice, noId);
 
         vm.prank(alice);
         lpToken.approve(address(market), lp);
@@ -112,7 +112,7 @@ contract MarketAMMTest is Base {
         assertEq(yOut, expectedYes);
         assertEq(nOut, expectedNo);
         assertEq(ct.balanceOf(alice, yesId), yesBefore + yOut);
-        assertEq(ct.balanceOf(alice, noId),  noBefore  + nOut);
+        assertEq(ct.balanceOf(alice, noId), noBefore + nOut);
     }
 
     function test_remove_liquidity_zero_lp_reverts() public {

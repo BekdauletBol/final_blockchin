@@ -23,7 +23,7 @@ export function handleMarketCreated(event: MarketCreated): void {
   market.collateralToken    = info.collateralToken;
   market.oracle             = info.oracle;
   market.thresholdPrice     = contract.thresholdPrice();
-  market.closeTime          = BigInt.fromI32(info.closeTime as i32);
+  market.closeTime          = info.closeTime;
   market.state              = 0; // Active
   market.outcome            = 0; // Unresolved
   market.yesTokenId         = contract.yesTokenId();

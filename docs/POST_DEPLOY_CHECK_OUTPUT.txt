@@ -1,0 +1,57 @@
+Compiling 1 files with Solc 0.8.24
+Solc 0.8.24 finished in 21.49s
+Compiler run successful!
+Script ran successfully.
+
+== Logs ==
+  ==========================================================
+     POST-DEPLOYMENT VERIFICATION — Arbitrum Sepolia
+  ==========================================================
+  
+  [ GovernanceToken ]
+    [PASS] Timelock has DEFAULT_ADMIN_ROLE
+    [PASS] Timelock has MINTER_ROLE
+    [PASS] Deployer does NOT have DEFAULT_ADMIN_ROLE
+    [PASS] totalSupply <= MAX_SUPPLY
+    [PASS] CLOCK_MODE is timestamp
+  
+  [ PredictionTimelock ]
+    [PASS] minDelay == 2 days
+    [PASS] REQUIRED_MIN_DELAY == 2 days (constant)
+    [PASS] Governor has PROPOSER_ROLE
+    [PASS] Governor has CANCELLER_ROLE
+    [PASS] address(0) has EXECUTOR_ROLE (open execution)
+    [PASS] Deployer does NOT have TIMELOCK_ADMIN_ROLE
+  
+  [ PredictionGovernor ]
+    [PASS] votingDelay == 1 day
+    [PASS] votingPeriod == 1 week
+    [PASS] quorumNumerator == 4
+    [PASS] CLOCK_MODE is timestamp
+    [PASS] Timelock is the governor's timelock
+  
+  [ ConditionalTokens ]
+    [PASS] Timelock has DEFAULT_ADMIN_ROLE
+    [PASS] Factory has FACTORY_ROLE
+    [PASS] Market1 is authorized
+  
+  [ FeeVault ]
+    [PASS] Timelock has DEFAULT_ADMIN_ROLE
+    [PASS] Factory has SOURCE_ROLE
+  
+  [ MarketFactory ]
+    [PASS] Implementation matches deployed impl
+    [PASS] Timelock has CREATOR_ROLE
+    [PASS] allMarketsLength == 1
+  
+  [ PredictionMarket #1 ]
+    [PASS] Timelock has DEFAULT_ADMIN_ROLE
+    [PASS] Timelock has UPGRADER_ROLE
+    [PASS] Deployer does NOT have DEFAULT_ADMIN_ROLE on market
+    [PASS] AMM NOT frozen at launch
+    [PASS] Market state == Active (0)
+    [PASS] closeTime > now
+  
+  ==========================================================
+     ALL CHECKS PASSED ✓
+  ==========================================================

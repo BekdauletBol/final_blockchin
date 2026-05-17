@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}              from "../Base.t.sol";
+import {Base} from "../Base.t.sol";
 import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
 
 contract ClaimTest is Base {
-
     function setUp() public override {
         super.setUp();
         // Bob buys YES; Carol buys NO
@@ -66,7 +65,7 @@ contract ClaimTest is Base {
     function test_claim_no_outcome_returns_collateral() public {
         _finalizeNo();
         (, uint256 nId) = _ids();
-        uint256 noBal  = ct.balanceOf(carol, nId);
+        uint256 noBal = ct.balanceOf(carol, nId);
         uint256 before = usdc.balanceOf(carol);
 
         vm.prank(carol);
@@ -98,13 +97,12 @@ contract ClaimTest is Base {
         market.dispute("Manipulated");
         // Governance resolves as Invalid
         _timelockExec(
-            address(market),
-            abi.encodeCall(IPredictionMarket.governanceResolve, (IPredictionMarket.Outcome.Invalid))
+            address(market), abi.encodeCall(IPredictionMarket.governanceResolve, (IPredictionMarket.Outcome.Invalid))
         );
 
         (uint256 yId, uint256 nId) = _ids();
         uint256 yesBal = ct.balanceOf(bob, yId);
-        uint256 noBal  = ct.balanceOf(carol, nId);
+        uint256 noBal = ct.balanceOf(carol, nId);
 
         vm.prank(bob);
         uint256 bobReturned = market.claim();

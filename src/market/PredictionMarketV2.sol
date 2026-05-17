@@ -50,14 +50,22 @@ contract PredictionMarketV2 is PredictionMarket {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc PredictionMarket
-    function _afterTrade(address trader, bool /*isYes*/, uint256 collateralIn, uint256 /*sharesOut*/)
+    function _afterTrade(
+        address trader,
+        bool,
+        /*isYes*/
+        uint256 collateralIn,
+        uint256 /*sharesOut*/
+    )
         internal
         override
     {
         cumulativeVolume += collateralIn;
         if (!hasTraded[trader]) {
             hasTraded[trader] = true;
-            unchecked { ++uniqueTraders; }
+            unchecked {
+                ++uniqueTraders;
+            }
         }
         emit V2VolumeRecorded(trader, collateralIn, cumulativeVolume);
     }

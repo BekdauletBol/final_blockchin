@@ -12,11 +12,11 @@ contract ForkChainlinkTest is Test {
     address internal constant ETH_USD_FEED = 0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612;
 
     AggregatorV3Interface internal feed;
-    ChainlinkResolver     internal resolver;
+    ChainlinkResolver internal resolver;
 
     function setUp() public {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
-        feed     = AggregatorV3Interface(ETH_USD_FEED);
+        feed = AggregatorV3Interface(ETH_USD_FEED);
         resolver = new ChainlinkResolver(feed, 1 hours, "ETH/USD Arb mainnet");
     }
 
@@ -33,7 +33,7 @@ contract ForkChainlinkTest is Test {
     function test_fork_chainlink_price_plausible() public view {
         (int256 price,,) = resolver.latestPrice();
         // ETH price should be between $100 and $100 000 (8 decimals)
-        assertGt(price, 100e8,   unicode"price < $100 — implausible");
+        assertGt(price, 100e8, unicode"price < $100 — implausible");
         assertLt(price, 100_000e8, unicode"price > $100 000 — implausible");
     }
 
@@ -57,7 +57,7 @@ contract ForkChainlinkTest is Test {
     }
 
     function test_fork_chainlink_round_data_consistent() public view {
-        (uint80 roundId, int256 answer, , uint256 updatedAt, uint80 answeredInRound) = feed.latestRoundData();
+        (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) = feed.latestRoundData();
         console2.log("roundId:", roundId, "answeredInRound:", answeredInRound);
         assertGe(answeredInRound, roundId - 10, "round sequence drift too large");
         assertGt(answer, 0, "answer is non-positive");

@@ -11,9 +11,9 @@ dataSources:
     name: MarketFactory
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"   # replaced at deploy
+      address: "0x680B59b93dc038530D839755C42D4dA19f9F2893"
       abi: MarketFactory
-      startBlock: 0
+      startBlock: 269117400
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -29,8 +29,61 @@ dataSources:
           handler: handleMarketCreated
       file: ./src/factory.ts
 
-  # ── PredictionMarket (template, one per market) ───────────────────────────────
-  - kind: ethereum/contract/template
+  # ── GovernanceToken ───────────────────────────────────────────────────────────
+  - kind: ethereum
+    name: GovernanceToken
+    network: arbitrum-sepolia
+    source:
+      address: "0x316E03b1C406540068012c9eDad8A4A03e3BB533"
+      abi: GovernanceToken
+      startBlock: 269117400
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - TokenHolder
+        - DelegateEvent
+      abis:
+        - name: GovernanceToken
+          file: ./abis/GovernanceToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: DelegateChanged(indexed address,indexed address,indexed address)
+          handler: handleDelegateChanged
+      file: ./src/governance.ts
+
+  # ── FeeVault ─────────────────────────────────────────────────────────────────
+  - kind: ethereum
+    name: FeeVault
+    network: arbitrum-sepolia
+    source:
+      address: "0xA890E97Ef006C0388B62B190a6cFf199181b781F"
+      abi: FeeVault
+      startBlock: 269117400
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - VaultSnapshot
+        - FeeEvent
+      abis:
+        - name: FeeVault
+          file: ./abis/FeeVault.json
+      eventHandlers:
+        - event: FeeForwarded(indexed address,uint256)
+          handler: handleFeeForwarded
+        - event: Deposit(indexed address,indexed address,uint256,uint256)
+          handler: handleVaultDeposit
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleVaultWithdraw
+      file: ./src/vault.ts
+
+templates:
+  # ── PredictionMarket (one per market) ───────────────────────────────
+  - kind: ethereum
     name: PredictionMarket
     network: arbitrum-sepolia
     source:
@@ -64,55 +117,3 @@ dataSources:
         - event: DisputeRaised(indexed address,string)
           handler: handleDisputed
       file: ./src/market.ts
-
-  # ── GovernanceToken ───────────────────────────────────────────────────────────
-  - kind: ethereum
-    name: GovernanceToken
-    network: arbitrum-sepolia
-    source:
-      address: "0x0000000000000000000000000000000000000000"
-      abi: GovernanceToken
-      startBlock: 0
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities:
-        - TokenHolder
-        - DelegateEvent
-      abis:
-        - name: GovernanceToken
-          file: ./abis/GovernanceToken.json
-      eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
-        - event: DelegateChanged(indexed address,indexed address,indexed address)
-          handler: handleDelegateChanged
-      file: ./src/governance.ts
-
-  # ── FeeVault ─────────────────────────────────────────────────────────────────
-  - kind: ethereum
-    name: FeeVault
-    network: arbitrum-sepolia
-    source:
-      address: "0x0000000000000000000000000000000000000000"
-      abi: FeeVault
-      startBlock: 0
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities:
-        - VaultSnapshot
-        - FeeEvent
-      abis:
-        - name: FeeVault
-          file: ./abis/FeeVault.json
-      eventHandlers:
-        - event: FeeForwarded(indexed address,uint256)
-          handler: handleFeeForwarded
-        - event: Deposit(indexed address,indexed address,uint256,uint256)
-          handler: handleVaultDeposit
-        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
-          handler: handleVaultWithdraw
-      file: ./src/vault.ts

@@ -6,7 +6,9 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {ERC1155HolderUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+import {
+    ERC1155HolderUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -49,20 +51,20 @@ contract PredictionMarket is
                                 CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 public constant PAUSER_ROLE   = keccak256("PAUSER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     /// @notice 0.3 % total fee, split 5 bps protocol / 25 bps LPs (in basis points × 10).
-    uint256 public constant FEE_BPS_PROTOCOL = 5;   // 0.05 %
-    uint256 public constant FEE_BPS_LP       = 25;  // 0.25 %
-    uint256 public constant FEE_BPS_TOTAL    = 30;  // 0.30 %
-    uint256 public constant BPS_DENOMINATOR  = 10_000;
+    uint256 public constant FEE_BPS_PROTOCOL = 5; // 0.05 %
+    uint256 public constant FEE_BPS_LP = 25; // 0.25 %
+    uint256 public constant FEE_BPS_TOTAL = 30; // 0.30 %
+    uint256 public constant BPS_DENOMINATOR = 10_000;
 
     /// @notice Minimum liquidity locked forever on the first deposit (Uniswap-V2 style inflation-attack guard).
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
 
     uint8 public constant OUTCOME_INDEX_YES = 1;
-    uint8 public constant OUTCOME_INDEX_NO  = 2;
+    uint8 public constant OUTCOME_INDEX_NO = 2;
 
     /*//////////////////////////////////////////////////////////////
                               IMMUTABLES STATE
@@ -70,13 +72,13 @@ contract PredictionMarket is
         not as Solidity immutables, because UUPS implementations can be upgraded.
     //////////////////////////////////////////////////////////////*/
 
-    IERC20             public collateralToken;
+    IERC20 public collateralToken;
     IConditionalTokens public conditionalTokens;
-    IOracleResolver    public oracle;
-    IFeeVault          public feeVault;
-    LPToken            public lpToken;
+    IOracleResolver public oracle;
+    IFeeVault public feeVault;
+    LPToken public lpToken;
 
-    int256  public thresholdPrice;
+    int256 public thresholdPrice;
     uint256 public override yesTokenId;
     uint256 public override noTokenId;
 
@@ -90,13 +92,13 @@ contract PredictionMarket is
     //////////////////////////////////////////////////////////////*/
 
     MarketState public marketState;
-    Outcome     public marketOutcome;
-    uint64      public disputeWindowEnd;
+    Outcome public marketOutcome;
+    uint64 public disputeWindowEnd;
 
     uint256 public yesReserve;
     uint256 public noReserve;
-    uint256 public accumulatedLPFees;  // collateral fees retained for LPs (released on removeLiquidity)
-    bool    public ammFrozen;
+    uint256 public accumulatedLPFees; // collateral fees retained for LPs (released on removeLiquidity)
+    bool public ammFrozen;
 
     /// @dev Storage gap for future variables. Decrease this when adding state in V2+.
     uint256[40] private __gap;
@@ -112,9 +114,12 @@ contract PredictionMarket is
     }
 
     function initialize(InitParams calldata p) external initializer {
-        if (p.admin == address(0) || p.collateralToken == address(0) || p.conditionalTokens == address(0)
-            || p.oracle == address(0) || p.feeVault == address(0) || p.lpToken == address(0))
+        if (
+            p.admin == address(0) || p.collateralToken == address(0) || p.conditionalTokens == address(0)
+                || p.oracle == address(0) || p.feeVault == address(0) || p.lpToken == address(0)
+        ) {
             revert ZeroAddress();
+        }
         require(p.closeTime > block.timestamp, "closeTime in past");
         require(p.disputeWindowDuration >= 1 hours && p.disputeWindowDuration <= 7 days, "dispute window OOB");
 
@@ -125,22 +130,22 @@ contract PredictionMarket is
         __ERC1155Holder_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, p.admin);
-        _grantRole(PAUSER_ROLE,   p.pauser);
+        _grantRole(PAUSER_ROLE, p.pauser);
         _grantRole(UPGRADER_ROLE, p.upgrader);
 
-        collateralToken       = IERC20(p.collateralToken);
-        conditionalTokens     = IConditionalTokens(p.conditionalTokens);
-        oracle                = IOracleResolver(p.oracle);
-        feeVault              = IFeeVault(p.feeVault);
-        lpToken               = LPToken(p.lpToken);
-        thresholdPrice        = p.thresholdPrice;
-        closeTime             = p.closeTime;
+        collateralToken = IERC20(p.collateralToken);
+        conditionalTokens = IConditionalTokens(p.conditionalTokens);
+        oracle = IOracleResolver(p.oracle);
+        feeVault = IFeeVault(p.feeVault);
+        lpToken = LPToken(p.lpToken);
+        thresholdPrice = p.thresholdPrice;
+        closeTime = p.closeTime;
         disputeWindowDuration = p.disputeWindowDuration;
-        question              = p.question;
+        question = p.question;
 
         (yesTokenId, noTokenId) = conditionalTokens.getIds(address(this));
 
-        marketState   = MarketState.Active;
+        marketState = MarketState.Active;
         marketOutcome = Outcome.Unresolved;
     }
 
@@ -235,7 +240,7 @@ contract PredictionMarket is
 
         // Update reserves BEFORE external calls (CEI).
         yesReserve += collateralAmount;
-        noReserve  += collateralAmount;
+        noReserve += collateralAmount;
 
         // --- INTERACTIONS ---
         collateralToken.safeTransferFrom(msg.sender, address(this), collateralAmount);
@@ -258,21 +263,21 @@ contract PredictionMarket is
         if (supply == 0) revert InsufficientLiquidity();
 
         yesOut = YulMath.mulDiv(lpAmount, yesReserve, supply);
-        noOut  = YulMath.mulDiv(lpAmount, noReserve,  supply);
+        noOut = YulMath.mulDiv(lpAmount, noReserve, supply);
         uint256 feeOut = YulMath.mulDiv(lpAmount, accumulatedLPFees, supply);
 
         if (yesOut < minYes || noOut < minNo) revert SlippageExceeded(minYes, yesOut);
 
         // EFFECTS
-        yesReserve        -= yesOut;
-        noReserve         -= noOut;
+        yesReserve -= yesOut;
+        noReserve -= noOut;
         accumulatedLPFees -= feeOut;
         lpToken.burn(msg.sender, lpAmount);
 
         // INTERACTIONS
         IConditionalTokens ct = conditionalTokens;
         ct.safeTransferFrom(address(this), msg.sender, yesTokenId, yesOut, "");
-        ct.safeTransferFrom(address(this), msg.sender, noTokenId,  noOut,  "");
+        ct.safeTransferFrom(address(this), msg.sender, noTokenId, noOut, "");
         if (feeOut > 0) collateralToken.safeTransfer(msg.sender, feeOut);
 
         emit LiquidityRemoved(msg.sender, lpAmount, yesOut, noOut);
@@ -311,8 +316,8 @@ contract PredictionMarket is
 
         // Split fee
         uint256 feeProtocol = YulMath.mulDiv(collateralIn, FEE_BPS_PROTOCOL, BPS_DENOMINATOR);
-        uint256 feeLP       = YulMath.mulDiv(collateralIn, FEE_BPS_LP,       BPS_DENOMINATOR);
-        uint256 cEffective  = collateralIn - feeProtocol - feeLP;
+        uint256 feeLP = YulMath.mulDiv(collateralIn, FEE_BPS_LP, BPS_DENOMINATOR);
+        uint256 cEffective = collateralIn - feeProtocol - feeLP;
 
         // Compute output
         uint256 yR = yesReserve;
@@ -330,10 +335,10 @@ contract PredictionMarket is
         uint256 kBefore = yR * nR;
         if (isYes) {
             yesReserve = yR + cEffective - sharesOut;
-            noReserve  = nR + cEffective;
+            noReserve = nR + cEffective;
         } else {
             yesReserve = yR + cEffective;
-            noReserve  = nR + cEffective - sharesOut;
+            noReserve = nR + cEffective - sharesOut;
         }
         // Invariant check (defensive; should hold to within rounding)
         uint256 kAfter = yesReserve * noReserve;
@@ -373,7 +378,7 @@ contract PredictionMarket is
         }
 
         uint256 yesBal = conditionalTokens.balanceOf(msg.sender, yesTokenId);
-        uint256 noBal  = conditionalTokens.balanceOf(msg.sender, noTokenId);
+        uint256 noBal = conditionalTokens.balanceOf(msg.sender, noTokenId);
 
         if (marketOutcome == Outcome.Yes) {
             if (yesBal == 0) revert NothingToClaim();
@@ -388,7 +393,7 @@ contract PredictionMarket is
             // 50/50 refund
             collateralReturned = (yesBal + noBal) / 2;
             if (yesBal > 0) conditionalTokens.burnSingle(msg.sender, OUTCOME_INDEX_YES, yesBal);
-            if (noBal  > 0) conditionalTokens.burnSingle(msg.sender, OUTCOME_INDEX_NO,  noBal);
+            if (noBal > 0) conditionalTokens.burnSingle(msg.sender, OUTCOME_INDEX_NO, noBal);
         } else {
             revert InvalidOutcome();
         }
@@ -403,29 +408,37 @@ contract PredictionMarket is
 
     function info() external view override returns (MarketInfo memory) {
         return MarketInfo({
-            question:        question,
-            closeTime:       closeTime,
-            resolutionTime:  resolutionTime,
+            question: question,
+            closeTime: closeTime,
+            resolutionTime: resolutionTime,
             collateralToken: address(collateralToken),
-            oracle:          address(oracle),
-            state:           marketState,
-            outcome:         marketOutcome,
+            oracle: address(oracle),
+            state: marketState,
+            outcome: marketOutcome,
             totalCollateral: collateralToken.balanceOf(address(this))
         });
     }
 
-    function state() external view override returns (MarketState) { return marketState; }
-    function outcome() external view override returns (Outcome) { return marketOutcome; }
+    function state() external view override returns (MarketState) {
+        return marketState;
+    }
+
+    function outcome() external view override returns (Outcome) {
+        return marketOutcome;
+    }
 
     function reserves() external view override returns (uint256, uint256) {
         return (yesReserve, noReserve);
     }
 
-    function k() external view override returns (uint256) { return yesReserve * noReserve; }
+    function k() external view override returns (uint256) {
+        return yesReserve * noReserve;
+    }
 
     function priceYes() external view override returns (uint256) {
         return YulMath.mulDiv(noReserve, 1e18, yesReserve + noReserve);
     }
+
     function priceNo() external view override returns (uint256) {
         return YulMath.mulDiv(yesReserve, 1e18, yesReserve + noReserve);
     }
@@ -435,6 +448,7 @@ contract PredictionMarket is
         uint256 cEff = collateralIn - YulMath.mulDiv(collateralIn, FEE_BPS_TOTAL, BPS_DENOMINATOR);
         yesOut = YulMath.mulDiv(cEff, yesReserve + noReserve + cEff, noReserve + cEff);
     }
+
     function quoteBuyNo(uint256 collateralIn) external view override returns (uint256 noOut) {
         if (yesReserve == 0 || noReserve == 0) return 0;
         uint256 cEff = collateralIn - YulMath.mulDiv(collateralIn, FEE_BPS_TOTAL, BPS_DENOMINATOR);
@@ -444,9 +458,9 @@ contract PredictionMarket is
     function winningsFor(address user) external view override returns (uint256) {
         if (marketState != MarketState.Finalized) return 0;
         uint256 yesBal = conditionalTokens.balanceOf(user, yesTokenId);
-        uint256 noBal  = conditionalTokens.balanceOf(user, noTokenId);
-        if (marketOutcome == Outcome.Yes)     return yesBal;
-        if (marketOutcome == Outcome.No)      return noBal;
+        uint256 noBal = conditionalTokens.balanceOf(user, noTokenId);
+        if (marketOutcome == Outcome.Yes) return yesBal;
+        if (marketOutcome == Outcome.No) return noBal;
         if (marketOutcome == Outcome.Invalid) return (yesBal + noBal) / 2;
         return 0;
     }
@@ -455,8 +469,13 @@ contract PredictionMarket is
                                 ADMIN
     //////////////////////////////////////////////////////////////*/
 
-    function pause() external override onlyRole(PAUSER_ROLE) { _pause(); }
-    function unpause() external override onlyRole(PAUSER_ROLE) { _unpause(); }
+    function pause() external override onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() external override onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
 
     /// @notice Freeze the AMM permanently (e.g. emergency).
     function freeze() external override onlyRole(DEFAULT_ADMIN_ROLE) {

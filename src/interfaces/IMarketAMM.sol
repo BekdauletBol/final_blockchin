@@ -23,21 +23,15 @@ interface IMarketAMM {
     error AmmFrozen();
     error DeadlinePassed();
 
-    function addLiquidity(uint256 collateralAmount, uint256 minLp, uint256 deadline)
-        external
-        returns (uint256 lpMinted);
+    function addLiquidity(uint256 collateralAmount, uint256 minLp, uint256 deadline) external returns (uint256 lpMinted);
 
     function removeLiquidity(uint256 lpAmount, uint256 minYes, uint256 minNo, uint256 deadline)
         external
         returns (uint256 yesOut, uint256 noOut);
 
-    function buyYes(uint256 collateralIn, uint256 minSharesOut, uint256 deadline)
-        external
-        returns (uint256 yesOut);
+    function buyYes(uint256 collateralIn, uint256 minSharesOut, uint256 deadline) external returns (uint256 yesOut);
 
-    function buyNo(uint256 collateralIn, uint256 minSharesOut, uint256 deadline)
-        external
-        returns (uint256 noOut);
+    function buyNo(uint256 collateralIn, uint256 minSharesOut, uint256 deadline) external returns (uint256 noOut);
 
     function reserves() external view returns (uint256 yesReserve, uint256 noReserve);
     function k() external view returns (uint256);

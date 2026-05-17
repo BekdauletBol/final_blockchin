@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}             from "../Base.t.sol";
+import {Base} from "../Base.t.sol";
 import {ChainlinkResolver} from "src/oracle/ChainlinkResolver.sol";
-import {MockAggregator}   from "src/mocks/MockAggregator.sol";
+import {MockAggregator} from "src/mocks/MockAggregator.sol";
 
 contract ChainlinkResolverTest is Base {
     ChainlinkResolver internal localResolver;
-    MockAggregator    internal localAgg;
+    MockAggregator internal localAgg;
 
     function setUp() public override {
         super.setUp();
-        localAgg      = new MockAggregator(THRESHOLD + 1, 8, "Test/USD");
+        localAgg = new MockAggregator(THRESHOLD + 1, 8, "Test/USD");
         localResolver = new ChainlinkResolver(localAgg, 2 hours, "Test feed");
     }
 
@@ -57,11 +57,7 @@ contract ChainlinkResolverTest is Base {
         // Advance time past staleAfter
         localAgg.setAnswerStale(THRESHOLD + 1, 2 hours + 1);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ChainlinkResolver.StalePrice.selector,
-                block.timestamp - (2 hours + 1),
-                2 hours
-            )
+            abi.encodeWithSelector(ChainlinkResolver.StalePrice.selector, block.timestamp - (2 hours + 1), 2 hours)
         );
         localResolver.latestPrice();
     }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}              from "../Base.t.sol";
+import {Base} from "../Base.t.sol";
 import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
-import {IAccessControl}    from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 contract MarketStateMachineTest is Base {
@@ -146,10 +146,9 @@ contract MarketStateMachineTest is Base {
         _resolveYes();
         market.dispute("Dispute!");
         _timelockExec(
-            address(market),
-            abi.encodeCall(IPredictionMarket.governanceResolve, (IPredictionMarket.Outcome.No))
+            address(market), abi.encodeCall(IPredictionMarket.governanceResolve, (IPredictionMarket.Outcome.No))
         );
-        assertEq(uint8(market.state()),   uint8(IPredictionMarket.MarketState.Finalized));
+        assertEq(uint8(market.state()), uint8(IPredictionMarket.MarketState.Finalized));
         assertEq(uint8(market.outcome()), uint8(IPredictionMarket.Outcome.No));
     }
 
@@ -158,8 +157,7 @@ contract MarketStateMachineTest is Base {
         market.dispute("Dispute!");
         vm.expectRevert(IPredictionMarket.InvalidOutcome.selector);
         _timelockExec(
-            address(market),
-            abi.encodeCall(IPredictionMarket.governanceResolve, (IPredictionMarket.Outcome.Unresolved))
+            address(market), abi.encodeCall(IPredictionMarket.governanceResolve, (IPredictionMarket.Outcome.Unresolved))
         );
     }
 
@@ -167,9 +165,7 @@ contract MarketStateMachineTest is Base {
         _resolveYes();
         market.dispute("Dispute!");
         bytes32 role = market.DEFAULT_ADMIN_ROLE();
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role));
         vm.prank(alice);
         market.governanceResolve(IPredictionMarket.Outcome.No);
     }
@@ -199,9 +195,7 @@ contract MarketStateMachineTest is Base {
 
     function test_pause_requires_pauser_role() public {
         bytes32 role = market.PAUSER_ROLE();
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, bob, role)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, bob, role));
         vm.prank(bob);
         market.pause();
     }

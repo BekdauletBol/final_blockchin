@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}    from "../Base.t.sol";
-import {IERC20}  from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Base} from "../Base.t.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract FeeVaultTest is Base {
@@ -58,17 +58,15 @@ contract FeeVaultTest is Base {
 
     function test_notify_fee_increases_total_assets() public {
         uint256 before = vault.totalAssets();
-        _simulateFee(5_000e6);
-        assertEq(vault.totalAssets(), before + 5_000e6);
+        _simulateFee(5000e6);
+        assertEq(vault.totalAssets(), before + 5000e6);
     }
 
     function test_notify_fee_unauthorized_reverts() public {
         bytes32 role = vault.SOURCE_ROLE();
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, bob, role)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, bob, role));
         vm.prank(bob);
-        vault.notifyFee(1_000e6);
+        vault.notifyFee(1000e6);
     }
 
     function test_notify_fee_zero_is_noop() public {
@@ -139,16 +137,16 @@ contract FeeVaultTest is Base {
     //////////////////////////////////////////////////////////////*/
 
     function test_preview_deposit_le_actual_shares() public view {
-        uint256 preview = vault.previewDeposit(1_000e6);
+        uint256 preview = vault.previewDeposit(1000e6);
         // previewDeposit must return the same or fewer shares than mint would give
-        uint256 actual = vault.convertToShares(1_000e6);
+        uint256 actual = vault.convertToShares(1000e6);
         assertLe(preview, actual + 1); // within 1 unit rounding
     }
 
     function test_preview_redeem_le_actual_assets() public view {
         uint256 shares = vault.balanceOf(alice);
         uint256 preview = vault.previewRedeem(shares);
-        uint256 actual  = vault.convertToAssets(shares);
+        uint256 actual = vault.convertToAssets(shares);
         assertLe(preview, actual + 1);
     }
 

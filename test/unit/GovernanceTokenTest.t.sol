@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {Base} from "../Base.t.sol";
 import {GovernanceToken} from "src/governance/GovernanceToken.sol";
-import {IAccessControl}  from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract GovernanceTokenTest is Base {
     /*//////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@ contract GovernanceTokenTest is Base {
     //////////////////////////////////////////////////////////////*/
 
     function test_name_and_symbol() public view {
-        assertEq(govToken.name(),   "Prediction DAO Token");
+        assertEq(govToken.name(), "Prediction DAO Token");
         assertEq(govToken.symbol(), "PRED");
     }
 
@@ -30,9 +30,7 @@ contract GovernanceTokenTest is Base {
 
     function test_mint_requires_minter_role() public {
         bytes32 role = govToken.MINTER_ROLE();
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role));
         vm.prank(alice);
         govToken.mint(alice, 1e18);
     }
@@ -45,7 +43,9 @@ contract GovernanceTokenTest is Base {
 
         // One more token must revert
         vm.expectRevert(
-            abi.encodeWithSelector(GovernanceToken.MaxSupplyExceeded.selector, govToken.MAX_SUPPLY() + 1, govToken.MAX_SUPPLY())
+            abi.encodeWithSelector(
+                GovernanceToken.MaxSupplyExceeded.selector, govToken.MAX_SUPPLY() + 1, govToken.MAX_SUPPLY()
+            )
         );
         vm.prank(address(timelock));
         govToken.mint(alice, 1);
@@ -79,7 +79,7 @@ contract GovernanceTokenTest is Base {
 
     function test_delegation_transfers_voting_power() public {
         vm.prank(deployer);
-        govToken.transfer(carol, 1_000e18);
+        govToken.transfer(carol, 1000e18);
         vm.prank(carol);
         govToken.delegate(alice);
 
@@ -113,20 +113,18 @@ contract GovernanceTokenTest is Base {
 
     function test_permit_allows_gasless_approval() public {
         // Build & sign EIP-2612 permit from alice
-        uint256 value   = 500e18;
-        uint256 nonce   = govToken.nonces(alice);
+        uint256 value = 500e18;
+        uint256 nonce = govToken.nonces(alice);
         uint256 deadline = block.timestamp + 1 hours;
 
-        (uint8 v, bytes32 r, bytes32 s) = _signPermit(
-            alice, address(market), value, nonce, deadline
-        );
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(alice, address(market), value, nonce, deadline);
 
         govToken.permit(alice, address(market), value, deadline, v, r, s);
         assertEq(govToken.allowance(alice, address(market)), value);
     }
 
     function test_permit_reverts_on_wrong_signer() public {
-        uint256 nonce    = govToken.nonces(alice);
+        uint256 nonce = govToken.nonces(alice);
         uint256 deadline = block.timestamp + 1 hours;
         // Sign with bob's key but supply alice's permit
         (uint8 v, bytes32 r, bytes32 s) = _signPermit(bob, address(market), 100e18, nonce, deadline);
@@ -139,18 +137,20 @@ contract GovernanceTokenTest is Base {
                               INTERNAL HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    function _signPermit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 nonce,
-        uint256 deadline
-    ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+    function _signPermit(address owner, address spender, uint256 value, uint256 nonce, uint256 deadline)
+        internal
+        view
+        returns (uint8 v, bytes32 r, bytes32 s)
+    {
         bytes32 domainSeparator = govToken.DOMAIN_SEPARATOR();
         bytes32 structHash = keccak256(
             abi.encode(
                 keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
-                owner, spender, value, nonce, deadline
+                owner,
+                spender,
+                value,
+                nonce,
+                deadline
             )
         );
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));

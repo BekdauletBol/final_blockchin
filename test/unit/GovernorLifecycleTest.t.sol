@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}            from "../Base.t.sol";
-import {IGovernor}       from "@openzeppelin/contracts/governance/IGovernor.sol";
+import {Base} from "../Base.t.sol";
+import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 
 contract GovernorLifecycleTest is Base {
@@ -44,13 +44,13 @@ contract GovernorLifecycleTest is Base {
 
     function test_full_governance_lifecycle() public {
         // 1. Build a proposal: mint 1 000 tokens to carol via governance
-        address[] memory targets   = new address[](1);
-        uint256[] memory values    = new uint256[](1);
-        bytes[]   memory calldatas = new bytes[](1);
-        targets[0]   = address(govToken);
-        values[0]    = 0;
-        calldatas[0] = abi.encodeCall(govToken.mint, (carol, 1_000e18));
-        string memory description  = "Proposal: mint 1000 PRED to carol";
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(govToken);
+        values[0] = 0;
+        calldatas[0] = abi.encodeCall(govToken.mint, (carol, 1000e18));
+        string memory description = "Proposal: mint 1000 PRED to carol";
         bytes32 descHash = keccak256(bytes(description));
 
         // deployer has > 1% supply and is self-delegated
@@ -82,7 +82,7 @@ contract GovernorLifecycleTest is Base {
         governor.execute(targets, values, calldatas, descHash);
 
         assertEq(uint8(governor.state(proposalId)), uint8(IGovernor.ProposalState.Executed));
-        assertEq(govToken.balanceOf(carol), carolBefore + 1_000e18);
+        assertEq(govToken.balanceOf(carol), carolBefore + 1000e18);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -91,12 +91,12 @@ contract GovernorLifecycleTest is Base {
 
     function test_proposal_defeated_if_quorum_not_met() public {
         // carol has 0 tokens so her vote won't meet quorum
-        address[] memory targets   = new address[](1);
-        uint256[] memory values    = new uint256[](1);
-        bytes[]   memory calldatas = new bytes[](1);
-        targets[0]   = address(govToken);
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(govToken);
         calldatas[0] = abi.encodeCall(govToken.mint, (carol, 1e18));
-        string memory description  = "Low quorum proposal";
+        string memory description = "Low quorum proposal";
 
         // Give carol exactly 1 token so she can just barely propose
         // Actually deployer proposes (he has >1%)
@@ -119,9 +119,9 @@ contract GovernorLifecycleTest is Base {
 
     function test_propose_below_threshold_reverts() public {
         // carol has no tokens → below 1% threshold
-        address[] memory targets   = new address[](1);
-        uint256[] memory values    = new uint256[](1);
-        bytes[]   memory calldatas = new bytes[](1);
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
         targets[0] = address(govToken);
 
         vm.expectRevert(); // GovernorInsufficientProposerVotes

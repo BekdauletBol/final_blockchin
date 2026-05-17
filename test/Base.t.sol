@@ -2,24 +2,24 @@
 pragma solidity 0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {ERC1967Proxy}   from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 // Protocol contracts
-import {GovernanceToken}     from "src/governance/GovernanceToken.sol";
-import {PredictionTimelock}  from "src/governance/PredictionTimelock.sol";
-import {PredictionGovernor}  from "src/governance/PredictionGovernor.sol";
-import {ConditionalTokens}   from "src/tokens/ConditionalTokens.sol";
-import {LPToken}             from "src/tokens/LPToken.sol";
-import {FeeVault}            from "src/vault/FeeVault.sol";
-import {PredictionMarket}    from "src/market/PredictionMarket.sol";
-import {PredictionMarketV2}  from "src/market/PredictionMarketV2.sol";
-import {MarketFactory}       from "src/market/MarketFactory.sol";
-import {ChainlinkResolver}   from "src/oracle/ChainlinkResolver.sol";
-import {MockAggregator}      from "src/mocks/MockAggregator.sol";
-import {MockERC20}           from "src/mocks/MockERC20.sol";
+import {GovernanceToken} from "src/governance/GovernanceToken.sol";
+import {PredictionTimelock} from "src/governance/PredictionTimelock.sol";
+import {PredictionGovernor} from "src/governance/PredictionGovernor.sol";
+import {ConditionalTokens} from "src/tokens/ConditionalTokens.sol";
+import {LPToken} from "src/tokens/LPToken.sol";
+import {FeeVault} from "src/vault/FeeVault.sol";
+import {PredictionMarket} from "src/market/PredictionMarket.sol";
+import {PredictionMarketV2} from "src/market/PredictionMarketV2.sol";
+import {MarketFactory} from "src/market/MarketFactory.sol";
+import {ChainlinkResolver} from "src/oracle/ChainlinkResolver.sol";
+import {MockAggregator} from "src/mocks/MockAggregator.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
 
 // Interfaces
-import {IPredictionMarket}  from "src/interfaces/IPredictionMarket.sol";
+import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
 import {IConditionalTokens} from "src/interfaces/IConditionalTokens.sol";
 
 /// @notice Shared deploy + helper base for all tests in the prediction-market suite.
@@ -28,45 +28,45 @@ abstract contract Base is Test {
                               TEST ACTORS
     //////////////////////////////////////////////////////////////*/
 
-    address internal deployer  = makeAddr("deployer");
-    address internal alice     = makeAddr("alice");
-    address internal bob       = makeAddr("bob");
-    address internal carol     = makeAddr("carol");
-    address internal multisig  = makeAddr("multisig");   // pauser role holder
+    address internal deployer = makeAddr("deployer");
+    address internal alice = makeAddr("alice");
+    address internal bob = makeAddr("bob");
+    address internal carol = makeAddr("carol");
+    address internal multisig = makeAddr("multisig"); // pauser role holder
 
     /*//////////////////////////////////////////////////////////////
                             PROTOCOL CONTRACTS
     //////////////////////////////////////////////////////////////*/
 
-    MockERC20            internal usdc;
-    MockAggregator       internal aggregator;
-    ChainlinkResolver    internal resolver;
-    GovernanceToken      internal govToken;
-    PredictionTimelock   internal timelock;
-    PredictionGovernor   internal governor;
-    ConditionalTokens    internal ct;
-    FeeVault             internal vault;
-    PredictionMarket     internal impl;     // bare implementation (no proxy)
-    MarketFactory        internal factory;
+    MockERC20 internal usdc;
+    MockAggregator internal aggregator;
+    ChainlinkResolver internal resolver;
+    GovernanceToken internal govToken;
+    PredictionTimelock internal timelock;
+    PredictionGovernor internal governor;
+    ConditionalTokens internal ct;
+    FeeVault internal vault;
+    PredictionMarket internal impl; // bare implementation (no proxy)
+    MarketFactory internal factory;
 
     // Default market deployed in setUp()
-    PredictionMarket     internal market;
-    LPToken              internal lpToken;
+    PredictionMarket internal market;
+    LPToken internal lpToken;
 
     /*//////////////////////////////////////////////////////////////
                           MARKET PARAMETERS
     //////////////////////////////////////////////////////////////*/
 
-    int256  internal constant THRESHOLD    = 3_000e8;   // $3 000 in 8-decimal Chainlink format
-    int256  internal constant PRICE_ABOVE  = 3_500e8;   // resolves YES
-    int256  internal constant PRICE_BELOW  = 2_500e8;   // resolves NO
-    uint64  internal constant CLOSE_DELAY  = 7 days;
-    uint64  internal constant DISPUTE_WIN  = 1 hours;
-    uint256 internal constant INITIAL_LIQ  = 100_000e6; // 100 000 USDC
+    int256 internal constant THRESHOLD = 3000e8; // $3 000 in 8-decimal Chainlink format
+    int256 internal constant PRICE_ABOVE = 3500e8; // resolves YES
+    int256 internal constant PRICE_BELOW = 2500e8; // resolves NO
+    uint64 internal constant CLOSE_DELAY = 7 days;
+    uint64 internal constant DISPUTE_WIN = 1 hours;
+    uint256 internal constant INITIAL_LIQ = 100_000e6; // 100 000 USDC
 
     // Standard amounts
-    uint256 internal constant ONE_USDC     = 1e6;
-    uint256 internal constant SWAP_AMOUNT  = 1_000e6;
+    uint256 internal constant ONE_USDC = 1e6;
+    uint256 internal constant SWAP_AMOUNT = 1000e6;
 
     /*//////////////////////////////////////////////////////////////
                                 SETUP
@@ -80,7 +80,7 @@ abstract contract Base is Test {
 
         // ── Oracle (mock) ────────────────────────────────────────
         aggregator = new MockAggregator(PRICE_ABOVE, 8, "ETH/USD");
-        resolver   = new ChainlinkResolver(aggregator, 1 hours, "ETH/USD Arbitrum");
+        resolver = new ChainlinkResolver(aggregator, 1 hours, "ETH/USD Arbitrum");
 
         console2.log("Deploying GovernanceToken...");
         govToken = new GovernanceToken(deployer, deployer, 10_000_000e18);
@@ -115,7 +115,11 @@ abstract contract Base is Test {
 
         // ── FeeVault ─────────────────────────────────────────────
         // Factory address not yet known; we deploy vault first and authorise factory after.
-        vault = new FeeVault(usdc, address(timelock), deployer /* placeholder */);
+        vault = new FeeVault(
+            usdc,
+            address(timelock),
+            deployer /* placeholder */
+        );
 
         // ── PredictionMarket implementation ───────────────────────
         impl = new PredictionMarket();
@@ -127,8 +131,8 @@ abstract contract Base is Test {
             address(vault),
             address(timelock),
             multisig,
-            deployer,        // admin (bootstrap)
-            deployer         // bootstrapCreator
+            deployer, // admin (bootstrap)
+            deployer // bootstrapCreator
         );
 
         // Grant factory the FACTORY_ROLE on ConditionalTokens
@@ -144,25 +148,25 @@ abstract contract Base is Test {
         // ── Deploy default test market ────────────────────────────
         (address mktAddr, address lpAddr) = factory.createMarket(
             MarketFactory.CreateParams({
-                collateralToken:       address(usdc),
-                oracle:                address(resolver),
-                thresholdPrice:        THRESHOLD,
-                closeTime:             uint64(block.timestamp + CLOSE_DELAY),
+                collateralToken: address(usdc),
+                oracle: address(resolver),
+                thresholdPrice: THRESHOLD,
+                closeTime: uint64(block.timestamp + CLOSE_DELAY),
                 disputeWindowDuration: DISPUTE_WIN,
-                question:              "Will ETH be above $3000 by next week?",
-                lpName:                "PredMarket LP #1",
-                lpSymbol:              "PRED-LP-1",
-                salt:                  keccak256("market-1")
+                question: "Will ETH be above $3000 by next week?",
+                lpName: "PredMarket LP #1",
+                lpSymbol: "PRED-LP-1",
+                salt: keccak256("market-1")
             })
         );
-        market  = PredictionMarket(mktAddr);
+        market = PredictionMarket(mktAddr);
         lpToken = LPToken(lpAddr);
 
         vm.stopPrank();
 
         // ── Fund test actors ─────────────────────────────────────
         _mintAndApprove(alice, 10_000_000e6);
-        _mintAndApprove(bob,   10_000_000e6);
+        _mintAndApprove(bob, 10_000_000e6);
         _mintAndApprove(carol, 10_000_000e6);
 
         // ── Seed initial liquidity from Alice ────────────────────
@@ -178,8 +182,10 @@ abstract contract Base is Test {
         // Transfer from deployer — deployer still holds all 10M tokens
         govToken.transfer(alice, 1_000_000e18);
         govToken.transfer(bob, 500_000e18);
-        vm.prank(alice);  govToken.delegate(alice);
-        vm.prank(bob);    govToken.delegate(bob);
+        vm.prank(alice);
+        govToken.delegate(alice);
+        vm.prank(bob);
+        govToken.delegate(bob);
     }
 
     /*//////////////////////////////////////////////////////////////

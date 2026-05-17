@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}               from "../Base.t.sol";
-import {ConditionalTokens}  from "src/tokens/ConditionalTokens.sol";
+import {Base} from "../Base.t.sol";
+import {ConditionalTokens} from "src/tokens/ConditionalTokens.sol";
 import {IConditionalTokens} from "src/interfaces/IConditionalTokens.sol";
-import {IAccessControl}     from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract ConditionalTokensTest is Base {
-
     /*//////////////////////////////////////////////////////////////
                          CONDITION PREPARATION
     //////////////////////////////////////////////////////////////*/
@@ -20,16 +19,14 @@ contract ConditionalTokensTest is Base {
     }
 
     function test_id_derivation_is_deterministic() public view {
-        (uint256 yId,)  = ct.getIds(address(market));
+        (uint256 yId,) = ct.getIds(address(market));
         uint256 expected = uint256(keccak256(abi.encode(address(market), uint8(1))));
         assertEq(yId, expected);
     }
 
     function test_prepare_condition_unauthorized_reverts() public {
         bytes32 role = ct.FACTORY_ROLE();
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role));
         vm.prank(alice);
         ct.prepareCondition(makeAddr("newMarket"));
     }
@@ -54,24 +51,24 @@ contract ConditionalTokensTest is Base {
     //////////////////////////////////////////////////////////////*/
 
     function test_mint_complete_creates_both_shares() public {
-        uint256 amount = 1_000e6;
+        uint256 amount = 1000e6;
         (uint256 yId, uint256 nId) = _ids();
 
         uint256 yesBefore = ct.balanceOf(bob, yId);
-        uint256 noBefore  = ct.balanceOf(bob, nId);
+        uint256 noBefore = ct.balanceOf(bob, nId);
 
         // Market mints on behalf of bob (market is the msg.sender)
         vm.prank(address(market));
         ct.mintComplete(bob, amount);
 
         assertEq(ct.balanceOf(bob, yId), yesBefore + amount);
-        assertEq(ct.balanceOf(bob, nId), noBefore  + amount);
+        assertEq(ct.balanceOf(bob, nId), noBefore + amount);
     }
 
     function test_mint_unauthorized_reverts() public {
         vm.expectRevert(IConditionalTokens.NotAuthorizedMarket.selector);
         vm.prank(alice);
-        ct.mintComplete(alice, 1_000e6);
+        ct.mintComplete(alice, 1000e6);
     }
 
     function test_burn_single_yes_decreases_balance() public {
@@ -83,16 +80,21 @@ contract ConditionalTokensTest is Base {
         uint256 yesBefore = ct.balanceOf(bob, yId);
 
         vm.prank(address(market));
-        ct.burnSingle(bob, 1 /* YES */, amount);
+        ct.burnSingle(
+            bob,
+            1,
+            /* YES */
+            amount
+        );
         assertEq(ct.balanceOf(bob, yId), yesBefore - amount);
     }
 
     function test_burn_single_invalid_outcome_index_reverts() public {
         vm.prank(address(market));
-        ct.mintComplete(bob, 1_000e6);
+        ct.mintComplete(bob, 1000e6);
         vm.expectRevert(abi.encodeWithSelector(IConditionalTokens.InvalidOutcomeIndex.selector, 3));
         vm.prank(address(market));
-        ct.burnSingle(bob, 3, 1_000e6);
+        ct.burnSingle(bob, 3, 1000e6);
     }
 
     function test_burn_complete_removes_both() public {

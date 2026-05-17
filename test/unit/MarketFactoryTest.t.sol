@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}           from "../Base.t.sol";
-import {MarketFactory}  from "src/market/MarketFactory.sol";
+import {Base} from "../Base.t.sol";
+import {MarketFactory} from "src/market/MarketFactory.sol";
 import {PredictionMarket} from "src/market/PredictionMarket.sol";
 import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
-import {IAccessControl}  from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract MarketFactoryTest is Base {
-
     /*//////////////////////////////////////////////////////////////
                              DEPLOYMENT
     //////////////////////////////////////////////////////////////*/
@@ -52,15 +51,15 @@ contract MarketFactoryTest is Base {
         vm.expectRevert(MarketFactory.SaltAlreadyUsed.selector);
         factory.createMarket(
             MarketFactory.CreateParams({
-                collateralToken:       address(usdc),
-                oracle:                address(resolver),
-                thresholdPrice:        THRESHOLD,
-                closeTime:             uint64(block.timestamp + CLOSE_DELAY),
+                collateralToken: address(usdc),
+                oracle: address(resolver),
+                thresholdPrice: THRESHOLD,
+                closeTime: uint64(block.timestamp + CLOSE_DELAY),
                 disputeWindowDuration: DISPUTE_WIN,
-                question:              "Dupe",
-                lpName:                "LP DUPE",
-                lpSymbol:              "LP-D",
-                salt:                  salt
+                question: "Dupe",
+                lpName: "LP DUPE",
+                lpSymbol: "LP-D",
+                salt: salt
             })
         );
     }
@@ -71,21 +70,19 @@ contract MarketFactoryTest is Base {
 
     function test_unauthorized_creator_reverts() public {
         bytes32 role = factory.CREATOR_ROLE();
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role));
         vm.prank(alice);
         factory.createMarket(
             MarketFactory.CreateParams({
-                collateralToken:       address(usdc),
-                oracle:                address(resolver),
-                thresholdPrice:        THRESHOLD,
-                closeTime:             uint64(block.timestamp + CLOSE_DELAY),
+                collateralToken: address(usdc),
+                oracle: address(resolver),
+                thresholdPrice: THRESHOLD,
+                closeTime: uint64(block.timestamp + CLOSE_DELAY),
                 disputeWindowDuration: DISPUTE_WIN,
-                question:              "Unauthorised",
-                lpName:                "LP UNAUTH",
-                lpSymbol:              "LP-U",
-                salt:                  keccak256("unauth-salt")
+                question: "Unauthorised",
+                lpName: "LP UNAUTH",
+                lpSymbol: "LP-U",
+                salt: keccak256("unauth-salt")
             })
         );
     }
@@ -130,15 +127,15 @@ contract MarketFactoryTest is Base {
     function test_second_market_gets_unique_address() public {
         (address market2,) = factory.createMarket(
             MarketFactory.CreateParams({
-                collateralToken:       address(usdc),
-                oracle:                address(resolver),
-                thresholdPrice:        THRESHOLD,
-                closeTime:             uint64(block.timestamp + CLOSE_DELAY),
+                collateralToken: address(usdc),
+                oracle: address(resolver),
+                thresholdPrice: THRESHOLD,
+                closeTime: uint64(block.timestamp + CLOSE_DELAY),
                 disputeWindowDuration: DISPUTE_WIN,
-                question:              "Second market",
-                lpName:                "LP #2",
-                lpSymbol:              "PRED-LP-2",
-                salt:                  keccak256("market-2")
+                question: "Second market",
+                lpName: "LP #2",
+                lpSymbol: "PRED-LP-2",
+                salt: keccak256("market-2")
             })
         );
         assertNotEq(market2, address(market));

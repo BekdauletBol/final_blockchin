@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}    from "../Base.t.sol";
-import {IERC20}  from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Base} from "../Base.t.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
 import {IMarketAMM} from "src/interfaces/IMarketAMM.sol";
@@ -19,7 +19,9 @@ contract VulnerableVault {
     IERC20 public token;
     mapping(address => uint256) public balances;
 
-    constructor(IERC20 token_) { token = token_; }
+    constructor(IERC20 token_) {
+        token = token_;
+    }
 
     function deposit(uint256 amount) external {
         token.safeTransferFrom(msg.sender, address(this), amount);
@@ -38,14 +40,14 @@ contract VulnerableVault {
 /// @notice Attacker contract targeting VulnerableVault.
 contract ReentrancyAttacker {
     VulnerableVault internal target;
-    IERC20          internal token;
-    uint256         internal attackAmount;
-    uint256         internal reentrancyCount;
-    uint256         internal constant MAX_REENTRY = 5;
+    IERC20 internal token;
+    uint256 internal attackAmount;
+    uint256 internal reentrancyCount;
+    uint256 internal constant MAX_REENTRY = 5;
 
     constructor(VulnerableVault target_, IERC20 token_) {
         target = target_;
-        token  = token_;
+        token = token_;
     }
 
     function attack(uint256 amount) external {
@@ -74,13 +76,13 @@ contract ReentrancyAttacker {
 //////////////////////////////////////////////////////////////*/
 
 contract ReentrancyCaseStudyTest is Base {
-    VulnerableVault   internal vulnVault;
+    VulnerableVault internal vulnVault;
     ReentrancyAttacker internal attacker;
 
     function setUp() public override {
         super.setUp();
         vulnVault = new VulnerableVault(usdc);
-        attacker  = new ReentrancyAttacker(vulnVault, usdc);
+        attacker = new ReentrancyAttacker(vulnVault, usdc);
     }
 
     /*---------- Before-fix: attack on VulnerableVault ----------*/
@@ -96,7 +98,7 @@ contract ReentrancyCaseStudyTest is Base {
         vulnVault.deposit(seed);
 
         // Attacker deposits 1 000 USDC
-        uint256 attackAmt = 1_000e6;
+        uint256 attackAmt = 1000e6;
         usdc.mint(address(attacker), attackAmt);
 
         attacker.attack(attackAmt);
@@ -125,9 +127,8 @@ contract ReentrancyCaseStudyTest is Base {
 
     /// @dev Verify that removeLiquidity cannot be re-entered via an ERC-1155 callback.
     function test_reentrancy_remove_liquidity_protected() public {
-        MaliciousRemoveLiquidityReceiver malicious2 = new MaliciousRemoveLiquidityReceiver(
-            address(market), address(lpToken)
-        );
+        MaliciousRemoveLiquidityReceiver malicious2 =
+            new MaliciousRemoveLiquidityReceiver(address(market), address(lpToken));
 
         // Fund and add liquidity on behalf of the malicious contract
         usdc.mint(address(malicious2), 200_000e6);
@@ -147,72 +148,75 @@ contract ReentrancyCaseStudyTest is Base {
 /// @notice Simulates a malicious ERC-1155 receiver that attempts to re-enter buyYes on receive.
 contract MaliciousERC1155Receiver {
     address internal market;
-    bool    internal attacking;
+    bool internal attacking;
 
-    constructor(address market_) { market = market_; }
+    constructor(address market_) {
+        market = market_;
+    }
 
     function attack(uint256 amount) external {
         attacking = true;
-        IMarketAMM(market).buyYes(
-amount, 0, block.timestamp + 1 hours);
+        IMarketAMM(market).buyYes(amount, 0, block.timestamp + 1 hours);
     }
 
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata)
-        external
-        returns (bytes4)
-    {
+    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external returns (bytes4) {
         if (attacking) {
             attacking = false;
             // Re-entry attempt — should revert with ReentrancyGuard
-            IMarketAMM(market).buyYes(
-1_000e6, 0, block.timestamp + 1 hours);
+            IMarketAMM(market).buyYes(1000e6, 0, block.timestamp + 1 hours);
         }
         return this.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata)
-        external pure returns (bytes4)
+        external
+        pure
+        returns (bytes4)
     {
         return this.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(bytes4) external pure returns (bool) { return true; }
+    function supportsInterface(bytes4) external pure returns (bool) {
+        return true;
+    }
 }
 
 /// @notice Attempts re-entrancy through removeLiquidity via ERC-1155 callback.
 contract MaliciousRemoveLiquidityReceiver {
     address internal market;
     address internal lp;
-    bool    internal attacking;
+    bool internal attacking;
 
-    constructor(address market_, address lp_) { market = market_; lp = lp_; }
+    constructor(address market_, address lp_) {
+        market = market_;
+        lp = lp_;
+    }
 
     function attack() external {
         attacking = true;
         uint256 bal = IERC20(lp).balanceOf(address(this));
-        IMarketAMM(market).removeLiquidity(
-bal / 2, 0, 0, block.timestamp + 1 hours);
+        IMarketAMM(market).removeLiquidity(bal / 2, 0, 0, block.timestamp + 1 hours);
     }
 
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata)
-        external
-        returns (bytes4)
-    {
+    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external returns (bytes4) {
         if (attacking) {
             attacking = false;
             uint256 bal = IERC20(lp).balanceOf(address(this));
             // Re-entry attempt
-            IMarketAMM(market).removeLiquidity(
-bal, 0, 0, block.timestamp + 1 hours);
+            IMarketAMM(market).removeLiquidity(bal, 0, 0, block.timestamp + 1 hours);
         }
         return this.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata)
-        external pure returns (bytes4)
+        external
+        pure
+        returns (bytes4)
     {
         return this.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(bytes4) external pure returns (bool) { return true; }
+    function supportsInterface(bytes4) external pure returns (bool) {
+        return true;
+    }
 }

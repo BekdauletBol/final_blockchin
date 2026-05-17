@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}    from "../Base.t.sol";
+import {Base} from "../Base.t.sol";
 import {YulMath} from "src/libraries/YulMath.sol";
 import {MathSol} from "src/libraries/YulMath.sol";
 
@@ -41,7 +41,7 @@ contract FuzzAMMTest is Base {
         vm.startPrank(bob);
         usdc.approve(address(market), collateral * 2);
         market.buyYes(collateral, 0, block.timestamp + 1 hours);
-        market.buyNo(collateral,  0, block.timestamp + 1 hours);
+        market.buyNo(collateral, 0, block.timestamp + 1 hours);
         vm.stopPrank();
 
         assertGe(market.k(), kBefore, "k decreased after alternating buys");
@@ -99,7 +99,7 @@ contract FuzzAMMTest is Base {
 
     /// @dev Property: LP supply strictly increases on deposit.
     function testFuzz_lp_supply_increases_on_deposit(uint256 collateral) public {
-        collateral = bound(collateral, 5_000e6, 100_000e6);
+        collateral = bound(collateral, 5000e6, 100_000e6);
         uint256 supplyBefore = lpToken.totalSupply();
         usdc.mint(carol, collateral);
         vm.prank(carol);
@@ -134,7 +134,7 @@ contract FuzzAMMTest is Base {
     function testFuzz_vault_convert_roundtrip(uint256 assets) public view {
         assets = bound(assets, 1, 1_000_000e6);
         uint256 shares = vault.convertToShares(assets);
-        uint256 back   = vault.convertToAssets(shares);
+        uint256 back = vault.convertToAssets(shares);
         assertLe(back, assets + 1, "round-trip inflated assets");
     }
 
@@ -148,15 +148,15 @@ contract FuzzAMMTest is Base {
         uint256 a256 = uint256(a);
         uint256 b256 = uint256(b);
         uint256 d256 = uint256(d);
-        uint256 expected = (a256 * b256) / d256;  // Safe: a,b are uint128, product fits in uint256
-        uint256 actual   = YulMath.mulDiv(a256, b256, d256);
+        uint256 expected = (a256 * b256) / d256; // Safe: a,b are uint128, product fits in uint256
+        uint256 actual = YulMath.mulDiv(a256, b256, d256);
         assertEq(actual, expected, "YulMath.mulDiv mismatch");
     }
 
     /// @dev Property: YulMath.sqrt(x*x) == x for x in [0, 2^128).
     function testFuzz_yulmath_sqrt_perfect_squares(uint128 x) public pure {
         uint256 square = uint256(x) * uint256(x);
-        uint256 root   = YulMath.sqrt(square);
+        uint256 root = YulMath.sqrt(square);
         assertEq(root, uint256(x), "sqrt of perfect square wrong");
     }
 
@@ -194,7 +194,7 @@ contract FuzzAMMTest is Base {
         uint256 snap = block.timestamp;
         vm.warp(snap + 5);
 
-        uint256 votes  = govToken.getPastVotes(delegatee, snap);
+        uint256 votes = govToken.getPastVotes(delegatee, snap);
         uint256 supply = govToken.getPastTotalSupply(snap);
         assertLe(votes, supply, "individual votes exceed total supply");
     }

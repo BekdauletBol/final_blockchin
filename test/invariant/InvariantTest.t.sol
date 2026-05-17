@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}    from "../Base.t.sol";
+import {Base} from "../Base.t.sol";
 import {Handler} from "./Handler.sol";
 
 /// @notice Invariant tests. Foundry calls the invariant_* functions after each Handler sequence.
@@ -22,7 +22,7 @@ contract InvariantTest is Base {
 
         // Fund handler's actors generously up front so calls don't dry up
         _mintAndApprove(alice, 100_000_000e6);
-        _mintAndApprove(bob,   100_000_000e6);
+        _mintAndApprove(bob, 100_000_000e6);
         _mintAndApprove(carol, 100_000_000e6);
 
         // Restrict fuzzer to only call the handler
@@ -52,11 +52,7 @@ contract InvariantTest is Base {
         uint256 supply = lpToken.totalSupply();
         if (supply > 0) {
             // address(1) always holds MINIMUM_LIQUIDITY
-            assertGe(
-                lpToken.balanceOf(address(1)),
-                market.MINIMUM_LIQUIDITY(),
-                "MINIMUM_LIQUIDITY not locked"
-            );
+            assertGe(lpToken.balanceOf(address(1)), market.MINIMUM_LIQUIDITY(), "MINIMUM_LIQUIDITY not locked");
         }
     }
 
@@ -123,7 +119,7 @@ contract InvariantTest is Base {
     /// @custom:invariant Accumulated LP fees must never exceed the contract's total collateral balance.
     function invariant_lp_fees_lte_contract_balance() public view {
         uint256 contractBalance = usdc.balanceOf(address(market));
-        uint256 lpFees          = market.accumulatedLPFees();
+        uint256 lpFees = market.accumulatedLPFees();
         assertLe(lpFees, contractBalance + 1, "lpFees exceed contract balance");
     }
 }

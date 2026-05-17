@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {CommonBase}    from "forge-std/Base.sol";
-import {StdCheats}     from "forge-std/StdCheats.sol";
-import {StdUtils}      from "forge-std/StdUtils.sol";
-import {Test}          from "forge-std/Test.sol";
+import {CommonBase} from "forge-std/Base.sol";
+import {StdCheats} from "forge-std/StdCheats.sol";
+import {StdUtils} from "forge-std/StdUtils.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {PredictionMarket} from "src/market/PredictionMarket.sol";
-import {LPToken}          from "src/tokens/LPToken.sol";
+import {LPToken} from "src/tokens/LPToken.sol";
 import {ConditionalTokens} from "src/tokens/ConditionalTokens.sol";
-import {MockERC20}        from "src/mocks/MockERC20.sol";
-import {MockAggregator}   from "src/mocks/MockAggregator.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
+import {MockAggregator} from "src/mocks/MockAggregator.sol";
 
 /// @notice Stateful handler called by the invariant fuzzer.
 contract Handler is CommonBase, StdCheats, StdUtils {
     PredictionMarket internal market;
-    LPToken          internal lpToken;
+    LPToken internal lpToken;
     ConditionalTokens internal ct;
-    MockERC20        internal usdc;
-    MockAggregator   internal agg;
+    MockERC20 internal usdc;
+    MockAggregator internal agg;
 
     address[] internal actors;
     uint256 internal constant MAX_COLLATERAL = 500_000e6;
@@ -36,12 +36,12 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         MockAggregator agg_,
         address[] memory actors_
     ) {
-        market  = market_;
+        market = market_;
         lpToken = lpToken_;
-        ct      = ct_;
-        usdc    = usdc_;
-        agg     = agg_;
-        actors  = actors_;
+        ct = ct_;
+        usdc = usdc_;
+        agg = agg_;
+        actors = actors_;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
 
     function addLiquidity(uint256 actorSeed, uint256 amount) external {
         address actor = _actor(actorSeed);
-        amount = bound(amount, 1_000e6, MAX_COLLATERAL);
+        amount = bound(amount, 1000e6, MAX_COLLATERAL);
         if (market.ammFrozen()) return;
         usdc.mint(actor, amount);
         vm.prank(actor);
@@ -72,7 +72,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         try market.buyYes(amount, 0, block.timestamp + 1 hours) {
             uint256 fee = amount * 5 / 10_000;
             ghost_totalProtocolFees += fee;
-            ghost_totalLPFees       += amount * 25 / 10_000;
+            ghost_totalLPFees += amount * 25 / 10_000;
             ghost_totalCollateralIn += amount;
         } catch {}
     }
@@ -87,7 +87,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         vm.prank(actor);
         try market.buyNo(amount, 0, block.timestamp + 1 hours) {
             ghost_totalProtocolFees += amount * 5 / 10_000;
-            ghost_totalLPFees       += amount * 25 / 10_000;
+            ghost_totalLPFees += amount * 25 / 10_000;
             ghost_totalCollateralIn += amount;
         } catch {}
     }

@@ -15,7 +15,7 @@ contract ChainlinkResolver is IOracleResolver {
 
     AggregatorV3Interface public immutable feed;
     uint256 public immutable staleAfter;
-    string  private _description;
+    string private _description;
 
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
@@ -46,12 +46,7 @@ contract ChainlinkResolver is IOracleResolver {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IOracleResolver
-    function latestPrice()
-        external
-        view
-        override
-        returns (int256 price, uint256 updatedAt, uint256 staleAfterSeconds)
-    {
+    function latestPrice() external view override returns (int256 price, uint256 updatedAt, uint256 staleAfterSeconds) {
         (price, updatedAt) = _safeLatest();
         staleAfterSeconds = staleAfter;
     }

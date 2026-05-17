@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}               from "../Base.t.sol";
-import {PredictionMarket}   from "src/market/PredictionMarket.sol";
+import {Base} from "../Base.t.sol";
+import {PredictionMarket} from "src/market/PredictionMarket.sol";
 import {PredictionMarketV2} from "src/market/PredictionMarketV2.sol";
-import {IPredictionMarket}  from "src/interfaces/IPredictionMarket.sol";
-import {IAccessControl}     from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract UUPSUpgradeTest is Base {
-
     PredictionMarketV2 internal v2Impl;
     PredictionMarketV2 internal marketV2; // same proxy, new type
 
@@ -17,10 +16,7 @@ contract UUPSUpgradeTest is Base {
         // Deploy V2 implementation
         v2Impl = new PredictionMarketV2();
         // Perform upgrade as Timelock
-        _timelockExec(
-            address(market),
-            abi.encodeWithSignature("upgradeToAndCall(address,bytes)", address(v2Impl), "")
-        );
+        _timelockExec(address(market), abi.encodeWithSignature("upgradeToAndCall(address,bytes)", address(v2Impl), ""));
         marketV2 = PredictionMarketV2(address(market));
     }
 
@@ -118,9 +114,7 @@ contract UUPSUpgradeTest is Base {
     function test_unauthorized_upgrade_reverts() public {
         PredictionMarketV2 newImpl = new PredictionMarketV2();
         bytes32 role = market.UPGRADER_ROLE();
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, role));
         vm.prank(alice);
         market.upgradeToAndCall(address(newImpl), "");
     }
@@ -134,18 +128,18 @@ contract UUPSUpgradeTest is Base {
         vm.expectRevert(); // InvalidInitialization (disableInitializers in constructor)
         freshImpl.initialize(
             IPredictionMarket.InitParams({
-                admin:                 deployer,
-                pauser:                deployer,
-                upgrader:              deployer,
-                collateralToken:       address(usdc),
-                conditionalTokens:     address(ct),
-                oracle:                address(resolver),
-                feeVault:              address(vault),
-                lpToken:               address(lpToken),
-                thresholdPrice:        THRESHOLD,
-                closeTime:             uint64(block.timestamp + CLOSE_DELAY),
+                admin: deployer,
+                pauser: deployer,
+                upgrader: deployer,
+                collateralToken: address(usdc),
+                conditionalTokens: address(ct),
+                oracle: address(resolver),
+                feeVault: address(vault),
+                lpToken: address(lpToken),
+                thresholdPrice: THRESHOLD,
+                closeTime: uint64(block.timestamp + CLOSE_DELAY),
                 disputeWindowDuration: DISPUTE_WIN,
-                question:              "should fail"
+                question: "should fail"
             })
         );
     }

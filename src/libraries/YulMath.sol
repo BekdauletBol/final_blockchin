@@ -108,12 +108,30 @@ library YulMath {
                 // Find highest bit set in y — saves ~7 iterations vs starting at 1.
                 let xx := y
                 let r := 1
-                if iszero(lt(xx, 0x100000000000000000000000000000000)) { xx := shr(128, xx) r := shl(64, r) }
-                if iszero(lt(xx, 0x10000000000000000)) { xx := shr(64, xx) r := shl(32, r) }
-                if iszero(lt(xx, 0x100000000)) { xx := shr(32, xx) r := shl(16, r) }
-                if iszero(lt(xx, 0x10000)) { xx := shr(16, xx) r := shl(8, r) }
-                if iszero(lt(xx, 0x100)) { xx := shr(8, xx) r := shl(4, r) }
-                if iszero(lt(xx, 0x10)) { xx := shr(4, xx) r := shl(2, r) }
+                if iszero(lt(xx, 0x100000000000000000000000000000000)) {
+                    xx := shr(128, xx)
+                    r := shl(64, r)
+                }
+                if iszero(lt(xx, 0x10000000000000000)) {
+                    xx := shr(64, xx)
+                    r := shl(32, r)
+                }
+                if iszero(lt(xx, 0x100000000)) {
+                    xx := shr(32, xx)
+                    r := shl(16, r)
+                }
+                if iszero(lt(xx, 0x10000)) {
+                    xx := shr(16, xx)
+                    r := shl(8, r)
+                }
+                if iszero(lt(xx, 0x100)) {
+                    xx := shr(8, xx)
+                    r := shl(4, r)
+                }
+                if iszero(lt(xx, 0x10)) {
+                    xx := shr(4, xx)
+                    r := shl(2, r)
+                }
                 if iszero(lt(xx, 0x8)) { r := shl(1, r) }
 
                 // Seven Newton iterations are enough for 256-bit inputs.

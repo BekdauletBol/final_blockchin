@@ -2,8 +2,8 @@
 pragma solidity 0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {IERC20}         from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20}      from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @notice Fork test against Arbitrum mainnet USDC.
 ///         Run with: forge test --match-contract ForkUSDCTest --fork-url $ARBITRUM_RPC_URL -vvv
@@ -31,7 +31,7 @@ contract ForkUSDCTest is Test {
     }
 
     function test_fork_usdc_transfer_from_whale() public {
-        uint256 amount = 1_000e6; // 1 000 USDC
+        uint256 amount = 1000e6; // 1 000 USDC
         vm.prank(WHALE);
         usdc.safeTransfer(alice, amount);
         assertEq(usdc.balanceOf(alice), amount);

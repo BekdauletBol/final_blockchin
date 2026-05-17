@@ -10,18 +10,18 @@ interface IPredictionMarket {
     //////////////////////////////////////////////////////////////*/
 
     enum MarketState {
-        Active,      // Trading open, before closeTime
-        Closed,      // Past closeTime, awaiting oracle resolution
-        Resolved,    // Oracle has supplied an outcome, dispute window running
-        Disputed,    // A dispute was raised — governance must resolve
-        Finalized    // Outcome locked, winners may claim
+        Active, // Trading open, before closeTime
+        Closed, // Past closeTime, awaiting oracle resolution
+        Resolved, // Oracle has supplied an outcome, dispute window running
+        Disputed, // A dispute was raised — governance must resolve
+        Finalized // Outcome locked, winners may claim
     }
 
     enum Outcome {
         Unresolved,
         Yes,
         No,
-        Invalid      // For markets resolved as invalid (50/50 refund)
+        Invalid // For markets resolved as invalid (50/50 refund)
     }
 
     struct MarketInfo {
@@ -36,18 +36,18 @@ interface IPredictionMarket {
     }
 
     struct InitParams {
-        address admin;                   // Timelock
-        address pauser;                  // multisig
-        address upgrader;                // Timelock
+        address admin; // Timelock
+        address pauser; // multisig
+        address upgrader; // Timelock
         address collateralToken;
         address conditionalTokens;
         address oracle;
         address feeVault;
         address lpToken;
-        int256  thresholdPrice;
-        uint64  closeTime;
-        uint64  disputeWindowDuration;
-        string  question;
+        int256 thresholdPrice;
+        uint64 closeTime;
+        uint64 disputeWindowDuration;
+        string question;
     }
 
     /*//////////////////////////////////////////////////////////////

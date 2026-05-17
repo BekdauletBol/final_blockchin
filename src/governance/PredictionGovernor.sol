@@ -5,7 +5,9 @@ import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {GovernorSettings} from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
 import {GovernorCountingSimple} from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
 import {GovernorVotes} from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import {GovernorVotesQuorumFraction} from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+import {
+    GovernorVotesQuorumFraction
+} from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {GovernorTimelockControl} from "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
@@ -24,9 +26,9 @@ contract PredictionGovernor is
     constructor(IVotes token_, TimelockController timelock_)
         Governor("PredictionGovernor")
         GovernorSettings(
-            1 days,      // voting delay (seconds)
-            1 weeks,     // voting period
-            0            // proposal threshold (overridden below — see proposalThreshold())
+            1 days, // voting delay (seconds)
+            1 weeks, // voting period
+            0 // proposal threshold (overridden below — see proposalThreshold())
         )
         GovernorVotes(token_)
         GovernorVotesQuorumFraction(4)
@@ -67,12 +69,7 @@ contract PredictionGovernor is
         return super.votingPeriod();
     }
 
-    function quorum(uint256 timepoint)
-        public
-        view
-        override(Governor, GovernorVotesQuorumFraction)
-        returns (uint256)
-    {
+    function quorum(uint256 timepoint) public view override(Governor, GovernorVotesQuorumFraction) returns (uint256) {
         return super.quorum(timepoint);
     }
 

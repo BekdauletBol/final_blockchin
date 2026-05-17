@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Base}    from "../Base.t.sol";
+import {Base} from "../Base.t.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
 
@@ -12,16 +12,18 @@ import {IPredictionMarket} from "src/interfaces/IPredictionMarket.sol";
 /// @notice Unguarded market resolver — any caller can resolve the outcome.
 ///         Demonstrates why every privileged function MUST use AccessControl.
 contract VulnerableMarketResolver {
-    bool   public resolved;
-    bool   public outcome;
+    bool public resolved;
+    bool public outcome;
     address public admin;
 
-    constructor() { admin = msg.sender; }
+    constructor() {
+        admin = msg.sender;
+    }
 
     /// @dev VULNERABLE: no access control — any address can call this.
     function resolve(bool _outcome) external {
         resolved = true;
-        outcome  = _outcome;
+        outcome = _outcome;
     }
 
     /// @dev ALSO VULNERABLE: uses tx.origin (banned by spec) instead of msg.sender.
@@ -76,9 +78,7 @@ contract SecurityAccessControlTest is Base {
         // Random user cannot call governanceResolve
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                alice,
-                market.DEFAULT_ADMIN_ROLE()
+                IAccessControl.AccessControlUnauthorizedAccount.selector, alice, market.DEFAULT_ADMIN_ROLE()
             )
         );
         vm.prank(alice);
@@ -90,11 +90,7 @@ contract SecurityAccessControlTest is Base {
 
     function test_access_control_pause_requires_pauser_role() public {
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                bob,
-                market.PAUSER_ROLE()
-            )
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, bob, market.PAUSER_ROLE())
         );
         vm.prank(bob);
         market.pause();
@@ -104,9 +100,7 @@ contract SecurityAccessControlTest is Base {
     function test_access_control_upgrade_requires_upgrader_role() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                carol,
-                market.UPGRADER_ROLE()
+                IAccessControl.AccessControlUnauthorizedAccount.selector, carol, market.UPGRADER_ROLE()
             )
         );
         vm.prank(carol);
@@ -116,9 +110,7 @@ contract SecurityAccessControlTest is Base {
     function test_access_control_freeze_requires_admin() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                alice,
-                market.DEFAULT_ADMIN_ROLE()
+                IAccessControl.AccessControlUnauthorizedAccount.selector, alice, market.DEFAULT_ADMIN_ROLE()
             )
         );
         vm.prank(alice);
@@ -133,28 +125,20 @@ contract SecurityAccessControlTest is Base {
     }
 
     function test_access_control_conditional_tokens_mint_requires_market() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IConditionalTokens.NotAuthorizedMarket.selector
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(IConditionalTokens.NotAuthorizedMarket.selector));
         vm.prank(alice);
-        ct.mintComplete(alice, 1_000e6);
+        ct.mintComplete(alice, 1000e6);
     }
 
     function test_access_control_fee_vault_notify_requires_source_role() public {
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                alice,
-                vault.SOURCE_ROLE()
-            )
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, vault.SOURCE_ROLE())
         );
-        usdc.mint(alice, 1_000e6);
+        usdc.mint(alice, 1000e6);
         vm.prank(alice);
-        usdc.approve(address(vault), 1_000e6);
+        usdc.approve(address(vault), 1000e6);
         vm.prank(alice);
-        vault.notifyFee(1_000e6);
+        vault.notifyFee(1000e6);
     }
 
     function test_access_control_no_tx_origin_in_market() public {
@@ -182,7 +166,11 @@ contract SecurityAccessControlTest is Base {
 /// @notice Intermediary contract: tests that msg.sender (not tx.origin) is checked.
 contract OriginForwarder {
     address internal market;
-    constructor(address m) { market = m; }
+
+    constructor(address m) {
+        market = m;
+    }
+
     function relayResolve(IPredictionMarket.Outcome o) external {
         IPredictionMarket(market).governanceResolve(o);
     }

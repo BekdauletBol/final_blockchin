@@ -18,7 +18,7 @@ contract ConditionalTokens is ERC1155, AccessControl, IConditionalTokens {
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
 
     uint8 public constant OUTCOME_YES = 1;
-    uint8 public constant OUTCOME_NO  = 2;
+    uint8 public constant OUTCOME_NO = 2;
 
     /*//////////////////////////////////////////////////////////////
                                   STATE
@@ -62,7 +62,7 @@ contract ConditionalTokens is ERC1155, AccessControl, IConditionalTokens {
         if (isAuthorizedMarket[market]) revert ConditionAlreadyPrepared();
 
         yesId = uint256(keccak256(abi.encode(market, OUTCOME_YES)));
-        noId  = uint256(keccak256(abi.encode(market, OUTCOME_NO)));
+        noId = uint256(keccak256(abi.encode(market, OUTCOME_NO)));
 
         isAuthorizedMarket[market] = true;
         _yesId[market] = yesId;
@@ -96,8 +96,8 @@ contract ConditionalTokens is ERC1155, AccessControl, IConditionalTokens {
     function burnSingle(address from, uint8 outcomeIndex, uint256 amount) external override onlyAuthorizedMarket {
         address market = msg.sender;
         uint256 id;
-        if (outcomeIndex == OUTCOME_YES)      id = _yesId[market];
-        else if (outcomeIndex == OUTCOME_NO)  id = _noId[market];
+        if (outcomeIndex == OUTCOME_YES) id = _yesId[market];
+        else if (outcomeIndex == OUTCOME_NO) id = _noId[market];
         else revert InvalidOutcomeIndex(outcomeIndex);
 
         _burn(from, id, amount);
