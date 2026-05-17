@@ -5,11 +5,23 @@ import { ADDRESSES, MARKET_ABI, MARKET_STATE, ERC20_ABI } from "../contracts";
 
 export function MarketPanel() {
   const [amount, setAmount] = useState("10");
-  
+
   const { data: marketInfo } = useReadContract({
     address: ADDRESSES.market1,
     abi: MARKET_ABI,
     functionName: "info",
+  });
+
+  const { data: reserves } = useReadContract({
+    address: ADDRESSES.market1,
+    abi: MARKET_ABI,
+    functionName: "reserves",
+  });
+
+  const { data: priceYes } = useReadContract({
+    address: ADDRESSES.market1,
+    abi: MARKET_ABI,
+    functionName: "priceYes",
   });
 
   const { data: hash, writeContract, isPending } = useWriteContract();
@@ -17,7 +29,7 @@ export function MarketPanel() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const handlePredict = (isYes: boolean) => {
-    const val = parseUnits(amount, 6); // Assuming USDC 6 decimals
+    const val = parseUnits(amount, 6);
     writeContract({
       address: ADDRESSES.market1,
       abi: MARKET_ABI,
@@ -28,8 +40,7 @@ export function MarketPanel() {
 
   const handleApprove = () => {
     const val = parseUnits(amount, 6);
-    // Finding collateral token from market info
-    const collateral = marketInfo?.[3] as `0x${string}`;
+    const collateral = (marketInfo as any)?.[3] as `0x${string}`;
     if (!collateral) return;
 
     writeContract({
@@ -45,13 +56,29 @@ export function MarketPanel() {
   return (
     <div className="panel">
       <h3>Active Market</h3>
-      <p className="question">{marketInfo[0]}</p>
+      <p className="question">{(marketInfo as any)[0]}</p>
+      
       <div className="market-stats">
-        <div>State: {MARKET_STATE[marketInfo[5]]}</div>
-        <div>Total Collateral: {formatUnits(marketInfo[7], 6)} USDC</div>
+        <div className="stat">
+          <label>State:</label>
+          <span className="badge">{MARKET_STATE[(marketInfo as any)[5]]}</span>
+        </div>
+        <div className="stat">
+          <label>YES Price:</label>
+          <span>{priceYes ? `${(Number(priceYes) / 1e18 * 100).toFixed(1)}¢` : "—"}</span>
+        </div>
+        <div className="stat">
+          <label>YES Reserve:</label>
+          <span>{reserves ? formatUnits((reserves as any)[0], 6) : "0"} USDC</span>
+        </div>
+        <div className="stat">
+          <label>NO Reserve:</label>
+          <span>{reserves ? formatUnits((reserves as any)[1], 6) : "0"} USDC</span>
+        </div>
       </div>
 
       <div className="trade-actions">
+        <label style={{display: 'block', marginBottom: '8px', fontSize: '0.9rem'}}>Collateral (USDC)</label>
         <input 
           type="number" 
           value={amount} 
@@ -59,7 +86,7 @@ export function MarketPanel() {
           placeholder="Amount in USDC"
         />
         <div className="btn-group">
-          <button onClick={handleApprove} disabled={isPending || isConfirming}>Approve</button>
+          <button onClick={handleApprove} disabled={isPending || isConfirming} className="btn-secondary">Approve</button>
           <button onClick={() => handlePredict(true)} disabled={isPending || isConfirming} className="btn-yes">Predict YES</button>
           <button onClick={() => handlePredict(false)} disabled={isPending || isConfirming} className="btn-no">Predict NO</button>
         </div>
