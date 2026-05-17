@@ -28,6 +28,9 @@ export function MarketPanel() {
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  if (marketInfo) console.log("Market Info:", marketInfo);
+  if (reserves) console.log("Market Reserves:", reserves);
+
   const handlePredict = (isYes: boolean) => {
     const val = parseUnits(amount, 6);
     writeContract({
@@ -40,11 +43,14 @@ export function MarketPanel() {
 
   const handleApprove = () => {
     const val = parseUnits(amount, 6);
-    const collateral = (marketInfo as any)?.[3] as `0x${string}`;
-    if (!collateral) return;
+    const collateral = (marketInfo as any)?.collateralToken;
+    if (!collateral) {
+      console.error("Collateral token address not found in marketInfo");
+      return;
+    }
 
     writeContract({
-      address: collateral,
+      address: collateral as `0x${string}`,
       abi: ERC20_ABI,
       functionName: "approve",
       args: [ADDRESSES.market1, val],
@@ -53,15 +59,17 @@ export function MarketPanel() {
 
   if (!marketInfo) return <div className="panel">Loading market data...</div>;
 
+  const info = marketInfo as any;
+
   return (
     <div className="panel">
       <h3>Active Market</h3>
-      <p className="question">{(marketInfo as any)[0]}</p>
+      <p className="question">{info.question || "Untitled Question"}</p>
       
       <div className="market-stats">
         <div className="stat">
           <label>State:</label>
-          <span className="badge">{MARKET_STATE[(marketInfo as any)[5]]}</span>
+          <span className="badge state-0">{MARKET_STATE[info.state] || "Active"}</span>
         </div>
         <div className="stat">
           <label>YES Price:</label>

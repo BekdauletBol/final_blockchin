@@ -13,6 +13,8 @@ export function PortfolioPanel() {
     query: { enabled: !!address },
   });
 
+  if (balance) console.log("PRED Balance (raw):", balance.toString());
+
   const { data: votes } = useReadContract({
     address: ADDRESSES.govToken,
     abi: GOV_TOKEN_ABI,

@@ -28,11 +28,31 @@ export function AnalyticsPanel() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["analytics", since],
-    queryFn: async () => request(SUBGRAPH_URL, ANALYTICS_QUERY, { since }),
+    queryFn: async () => {
+      console.log("Fetching from subgraph:", SUBGRAPH_URL);
+      try {
+        const result = await request(SUBGRAPH_URL, ANALYTICS_QUERY, { since });
+        console.log("Subgraph response:", result);
+        return result;
+      } catch (err) {
+        console.error("Subgraph fetch failed:", err);
+        throw err;
+      }
+    },
+    retry: 1,
   });
 
   if (isLoading) return <div className="panel">Loading from subgraph...</div>;
-  if (error) return <div className="panel error">Subgraph error: {(error as Error).message}</div>;
+  
+  if (error) {
+    return (
+      <div className="panel error">
+        <h3>⚠️ Subgraph Error</h3>
+        <p>{(error as any).message || "Unknown error"}</p>
+        <p className="info">Check console for details. Ensure SUBGRAPH_URL is correct and the slug is valid.</p>
+      </div>
+    );
+  }
 
   const markets = (data as any)?.markets || [];
   const snap = (data as any)?.vaultSnapshots?.[0];
