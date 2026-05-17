@@ -2,7 +2,6 @@ import { WalletButton } from "./components/WalletButton";
 import { PortfolioPanel } from "./components/PortfolioPanel";
 import { MarketPanel } from "./components/MarketPanel";
 import { AnalyticsPanel } from "./components/AnalyticsPanel";
-import "./App.css";
 
 function App() {
   return (
