@@ -1,4 +1,4 @@
-# 🔮 Prediction Market Protocol
+#  Prediction Market Protocol
 
 A production-grade, full-stack decentralized binary prediction market protocol built on Arbitrum Sepolia. Developed as the Blockchain Technologies 2 capstone (Option D — On-Chain Prediction Market).
 
