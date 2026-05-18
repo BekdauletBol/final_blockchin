@@ -231,9 +231,9 @@ See [`docs/GAS_REPORT.md`](docs/GAS_REPORT.md) for the full report including:
 
 | Member | Ownership Area |
 |---|---|
-| Member A | Smart contracts (market core, AMM, factory, UUPS) |
-| Member B | Governance stack, oracle adapter, security tests |
-| Member C | Frontend, subgraph, deployment scripts, documentation |
+| Bekdaulet | Smart contracts (market core, AMM, factory, UUPS) |
+| Kairat | Governance stack, oracle adapter, security tests |
+| Nuraly | Frontend, subgraph, deployment scripts, documentation |
 
 ---
 
