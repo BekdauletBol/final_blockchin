@@ -227,16 +227,6 @@ See [`docs/GAS_REPORT.md`](docs/GAS_REPORT.md) for the full report including:
 
 ---
 
-## Team & Contribution
-
-| Member | Ownership Area |
-|---|---|
-| Bekdaulet | Smart contracts (market core, AMM, factory, UUPS) |
-| Kairat | Governance stack, oracle adapter, security tests |
-| Nuraly | Frontend, subgraph, deployment scripts, documentation |
-
----
-
 ## License
 
 MIT
